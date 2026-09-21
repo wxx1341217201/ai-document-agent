@@ -659,17 +659,20 @@ public interface ChunkingStrategy {
 
 | 类型 | 名称示例 |
 |---|---|
-| Exchange | `document.ingestion.exchange` |
-| 主队列 | `document.ingestion.queue` |
-| Routing key | `document.ingestion.requested` |
-| 重试队列 | `document.ingestion.retry.queue` |
-| 死信队列 | `document.ingestion.dlq` |
+| 文档协调 Exchange | `document.ingestion.exchange` |
+| 文档协调队列 | `document.ingestion.queue` |
+| 文档 Routing key | `document.ingestion.requested` |
+| Batch Exchange | `document.batch.exchange` |
+| Batch 主队列 | `document.batch.queue` |
+| Batch Routing key | `document.batch.requested` |
+| 重试队列 | `document.ingestion.retry.queue` / `document.batch.retry.queue` |
+| 死信队列 | `document.ingestion.dlq` / `document.batch.dlq` |
 
 名称应通过配置集中管理，不要散落硬编码。
 
-### 消息契约
+### 文档入口消息契约
 
-消息只传标识和控制信息，不传整个文件：
+文档入口消息只传标识和控制信息，不传整个文件：
 
 ```json
 {
@@ -682,6 +685,84 @@ public interface ChunkingStrategy {
   "schemaVersion": 1
 }
 ```
+
+### 长文档分段异步消费模型（简历对齐关键项）
+
+为了真正对应“长文档分段异步消费”，不能只做到“一个文档对应一条 RabbitMQ 消息”。长文档必须采用**文档级协调任务 + Chunk Batch 子任务**的两级异步模型。
+
+推荐执行链路：
+
+```mermaid
+flowchart TD
+    A["上传文档"] --> B["DocumentIngestTask"]
+    B --> C["解析 PDF/DOCX/TXT"]
+    C --> D["Chunking"]
+    D --> E["持久化 document_chunk"]
+    E --> F["按 batchSize 拆分 ChunkBatchTask"]
+    F --> G1["Batch 1"]
+    F --> G2["Batch 2"]
+    F --> G3["Batch ..."]
+    F --> GN["Batch N"]
+    G1 --> H["RabbitMQ Worker Pool"]
+    G2 --> H
+    G3 --> H
+    GN --> H
+    H --> I["M07 Vector Index"]
+    H --> J["M08 BM25 Index"]
+    I --> K["Batch 完成聚合"]
+    J --> K
+    K --> L["全部 batch 成功后 DOCUMENT_READY"]
+```
+
+例如一份长文档切分后产生 1200 个 chunk，若 `batchSize=50`，则生成 24 个 `ChunkBatchTask`。多个消费者可以并行处理这些 batch，而不是让单个消费者串行处理整份长文档。`batchSize`、消费者并发数和 prefetch 必须配置化，并在 M19E 中通过压测确定。
+
+M06 负责建立两级任务协议、批任务状态和调度框架；M07、M08 再分别接入向量索引和 BM25 的实际消费逻辑，因此 M06 阶段**不要求** Qdrant 或 Elasticsearch 已可用。
+
+### 两级消息契约
+
+文档级协调消息：
+
+```json
+{
+  "eventId": "UUID",
+  "jobId": "UUID",
+  "documentId": 101,
+  "knowledgeBaseId": 9,
+  "operation": "PARSE_AND_SPLIT",
+  "attempt": 0,
+  "schemaVersion": 1
+}
+```
+
+Chunk Batch 消息：
+
+```json
+{
+  "eventId": "UUID",
+  "jobId": "UUID",
+  "batchId": "UUID",
+  "documentId": 101,
+  "knowledgeBaseId": 9,
+  "chunkFrom": 0,
+  "chunkTo": 49,
+  "stage": "INDEX",
+  "attempt": 0,
+  "schemaVersion": 1
+}
+```
+
+消息仍然只传标识和控制信息，不传整份文件或大量 chunk 正文；消费者根据 ID 从数据库读取当前 batch 数据。
+
+### 摄取任务状态表
+
+为了支持批任务聚合、性能统计和失败恢复，建议增加：
+
+- `document_ingestion_job`：记录一份文档本次摄取的总体状态。
+- `document_batch_task`：记录每个 batch 的排队、开始、完成、重试和失败状态。
+
+`document_batch_task` 至少保存：`batch_id`、`job_id`、`batch_no`、`chunk_from`、`chunk_to`、`status`、`attempt`、`enqueued_at`、`started_at`、`completed_at`、`error_code`、`version`。
+
+这些时间字段也是 M19E 性能 Benchmark 的数据来源，禁止在报告阶段人工拼接时间。
 
 ### 状态机
 
@@ -705,27 +786,35 @@ stateDiagram-v2
 - 可重试错误采用有限次数指数退避；永久错误直接进入失败态或 DLQ。
 - 错误消息不能无限循环。
 - 同一文档重复投递不能产生重复 chunk 或重复索引。
+- 同一个 `batchId` 重复投递必须幂等；一个 batch 只能从合法状态推进。
+- 文档只有在所有必需 batch 均成功后才能进入 `READY`；部分 batch 失败时文档保持 `PROCESSING/RETRYING/FAILED`，不能误报成功。
+- batch 聚合计数必须使用事务、乐观锁或条件更新，禁止依赖进程内计数器。
 - 数据库与消息一致性优先使用 outbox；如本阶段暂不实现，必须明确记录窗口风险并提供补偿扫描。
 
 ### 验收标准
 
 - 上传后快速返回，后台完成解析和切分。
-- 重复发送同一消息，最终只有一套有效 chunk。
+- 长文档切分后能按照配置生成多个 `ChunkBatchTask`，消费者可并行处理。
+- 重复发送同一文档消息或同一 batch 消息，最终只有一套有效 chunk/索引任务。
 - 模拟一次瞬时失败后可以重试成功。
-- 永久失败进入 `FAILED`，包含安全错误摘要，并可手动重试。
+- 任意一个 batch 永久失败时不能把整份文档错误标记为 `READY`。
+- 所有 batch 完成后聚合状态准确，文档只发生一次合法的最终状态转换。
 - RabbitMQ 重启后持久消息仍可处理。
+- `enqueued_at/started_at/completed_at` 可以用于计算真实排队等待和处理吞吐量。
 
 ### 模块提示词
 
 ```text
 执行 M06 RabbitMQ 异步摄取模块。
 检查现有 compose 和配置，加入 RabbitMQ 管理版服务、健康检查和持久卷。
-定义版本化摄取消息契约、exchange、主队列、有限重试队列和 DLQ。
-把上传后的处理改为异步：发布任务，消费者加载原文件，调用已有解析和切分服务，批量替换 chunk，并维护文档状态机。
-实现 publisher confirm、消费者幂等、可重试/不可重试错误分类、有限重试、失败摘要和手动重试入口。
+实现“文档级协调任务 + Chunk Batch 子任务”的两级异步架构：文档解析并切分后，按可配置 batchSize 生成多个 ChunkBatchTask，由 Worker Pool 并行消费；不要把整份长文档作为一个不可拆分的大任务串行处理。
+定义版本化消息契约、exchange、主队列、batch 队列、有限重试队列和 DLQ；消息只传 ID 与控制字段。
+增加 document_ingestion_job / document_batch_task 或等价持久化模型，记录 enqueuedAt、startedAt、completedAt、attempt、status，为 M19E 的等待时间和吞吐量 Benchmark 提供真实数据。
+实现 publisher confirm、文档级和 batch 级幂等、聚合完成判断、可重试/不可重试错误分类、有限重试、失败摘要和手动重试入口。
+聚合状态必须使用数据库条件更新、事务或乐观锁，禁止只依赖 JVM 内存计数；只有所有必需 batch 成功后才能把文档置为 READY。
 如果没有实现事务 outbox，必须实现定时补偿扫描并在文档中说明一致性窗口。
-测试重复投递、瞬时失败、永久失败、非法状态转换和成功处理。
-不要在本模块做 Embedding、Qdrant 或 Elasticsearch。
+测试重复文档消息、重复 batch、并发 batch 完成、瞬时失败、永久失败、RabbitMQ 重启和非法状态转换。
+M06 只建立分段异步消费框架，不要在本模块实现 Qdrant/Elasticsearch 的具体索引逻辑；M07/M08 再接入对应消费者。
 ```
 
 ---
@@ -782,6 +871,7 @@ public interface VectorIndex {
 - 删除或重新处理文档时，旧向量可清除或覆盖。
 - 模型超时、限流、鉴权失败、维度不符有明确分类。
 - 没有真实模型密钥时，使用确定性 fake embedding 完成自动化测试，不伪装为真实效果。
+- 同一 `ChunkBatchTask` 重复消费不会产生重复向量，且 vector stage 状态只能合法推进。
 
 ### 模块提示词
 
@@ -791,7 +881,7 @@ public interface VectorIndex {
 配置 embedding 模型、维度、批量大小、超时和 collection；启动时校验 collection 维度。
 以稳定 pointId 批量 upsert chunk 向量，payload 包含 knowledgeBaseId、documentId、chunkId、页码和模型版本。
 语义检索必须强制按 knowledgeBaseId 过滤。实现按文档删除/替换向量。
-将向量索引接入 M06 流水线，并保证重复消费幂等。
+将向量索引作为 M06 `ChunkBatchTask` 的一个实际处理阶段接入：按 batch 批量生成 embedding 和 upsert，并以 `batchId + VECTOR_INDEX + version` 或等价键保证重复消费幂等；成功后记录该 batch 的 vector stage 完成状态。
 使用确定性 fake embedding 编写单元/集成测试；若环境有真实 API Key，再提供可选 smoke test。
 ```
 
@@ -838,6 +928,7 @@ public interface KeywordIndex {
 - 重复写入以 chunk ID 覆盖。
 - 精确编号和中文关键词测试能返回预期结果。
 - 文档重处理和删除会清理旧索引。
+- 同一 `ChunkBatchTask` 重复消费不会产生重复 ES 文档，且 keyword stage 状态只能合法推进。
 
 ### 模块提示词
 
@@ -847,8 +938,8 @@ public interface KeywordIndex {
 设计可版本化 mapping 和 alias，明确中文分词策略及其可复现方式。
 实现 KeywordIndex 接口、批量 upsert、按知识库过滤搜索、按文档删除。
 文档 ID 使用稳定 chunkId，逐项检查 bulk 写入结果。
-把关键词索引步骤接入 M06，定义向量成功但 ES 失败时的状态与重试策略。
-编写专有名词、编号、中文关键词、跨知识库隔离、重复索引与删除测试。
+把关键词索引作为 M06 `ChunkBatchTask` 的另一个实际处理阶段接入：按 batch bulk 写入，以 `batchId + KEYWORD_INDEX + version` 或等价键保证幂等；定义 Vector 已成功但 ES 失败时 batch/job 的状态与重试策略，两个必需索引阶段都成功后才允许聚合完成。
+编写专有名词、编号、中文关键词、跨知识库隔离、重复索引、重复 batch 与删除测试。
 ```
 
 ---
@@ -1443,71 +1534,419 @@ stateDiagram-v2
 
 ### 目标
 
-用可重复的数据证明系统质量和稳定性，而不是只展示“接口能返回”。
+用可重复的数据证明系统质量和稳定性，而不是只展示“接口能返回”。本模块同时负责把简历中的关键数字变成**可追溯、可重复、可解释的实验结果**。
 
-### 离线评测集
+> **重要规则：** 下文中的 `91%`、`83%`、`490ms`、`89%`、`<0.5%`、`7.25s → 0.25s`、`2.3×` 都是“目标对齐值”，不是预置测试结果。必须由固定数据集和脚本真实运行产生；若真实结果未达到目标，报告必须保留真实结果，禁止硬编码、筛除失败样本或修改统计口径伪造达标。
 
-创建不含敏感信息的测试集合，每条至少包含：
+### 离线评测集总规范
+
+所有 Benchmark 数据放在版本化目录，例如：
+
+```text
+benchmarks/
+├── retrieval/
+├── rag/
+├── agent/
+├── recovery/
+├── rabbitmq/
+└── reports/
+```
+
+公共字段建议：
 
 ```json
 {
+  "caseId": "RET-001",
   "question": "...",
   "expectedDocumentIds": [101],
   "expectedChunkIds": [1001, 1002],
   "referenceAnswer": "...",
+  "requiredFacts": ["..."],
   "tags": ["exact-term", "multi-hop"]
 }
 ```
 
-### 指标
+每份报告必须记录：Git commit、配置摘要、模型名、embedding 模型、数据集版本、机器 CPU/内存、JDK、Docker 版本、并发数、预热次数、有效样本数、失败样本数和测试时间。
 
-检索指标：
+---
 
-- Recall@K。
-- MRR。
-- nDCG@K。
-- 向量、BM25、RRF、RRF+rerank 的对比。
+### M19A：Retrieval Benchmark —— Recall@5 91% 与 P95 490ms
 
-回答指标：
+#### 目标
 
-- 引用有效率：引用是否真实存在于本次上下文。
-- 引用覆盖率：关键陈述是否有来源。
-- 拒答准确性：无证据问题是否拒绝编造。
-- 可选的人工评分或受控 LLM-as-judge；必须记录评审模型、提示词和局限。
+验证“BM25 + 向量检索 + RRF + Cross-Encoder”是否真实提高检索质量，并给出稳定延迟数据。
 
-工程指标：
+#### 数据集
 
-- HTTP 请求耗时和错误率。
-- 文档处理成功率、阶段耗时、队列堆积。
-- 检索各阶段耗时和降级次数。
-- 模型请求次数、token 用量、超时和错误。
-- Agent 步骤数、工具调用数、恢复次数。
+建议至少构建 200 条人工标注检索问题，覆盖：
+
+- 精确关键词、编号、错误码。
+- 语义改写。
+- 中文同义表达。
+- 跨段落/跨文档问题。
+- 容易被相似内容干扰的问题。
+- 无答案问题。
+
+每条问题必须标注一个或多个 `expectedChunkIds`，否则不能计算严格 Recall@K。
+
+#### 对照实验
+
+同一数据集至少跑四组：
+
+1. Vector Only。
+2. BM25 Only。
+3. Vector + BM25 + RRF。
+4. Vector + BM25 + RRF + Cross-Encoder。
+
+核心公式：
+
+```text
+Recall@5
+= Top-5 中命中至少一个相关 chunk 的问题数 / 可回答问题总数
+```
+
+同时输出 MRR、nDCG@5，并按 tag 分桶，防止整体平均值掩盖某类问题明显退化。
+
+#### 目标对齐值
+
+- `RRF + Cross-Encoder` 的 `Recall@5 >= 91%`。
+- 若没有达到 91%，保留真实数据，通过 chunkSize、overlap、vectorTopK、keywordTopK、RRF k、rerankTopN 等配置继续实验，而不是直接修改结果。
+
+#### P95 490ms 的统一口径
+
+为了让该数字可解释，`retrieval_latency` 固定统计以下路径：
+
+```text
+Query Embedding
++ Vector Search
++ BM25 Search
++ RRF Fusion
++ Cross-Encoder Rerank
+```
+
+**明确不包含最终 ChatModel 答案生成时间。**
+
+压测要求：
+
+- 先预热至少 50 次。
+- 正式采样建议 >= 500 次请求。
+- 固定并发数并记录，例如 10。
+- 输出 P50/P95/P99、平均值、最大值、错误率。
+- 外部 reranker 如果受网络波动影响，必须记录供应商和区域；推荐同时提供本地/fake 固定延迟 profile 用于回归，但简历性能数字必须注明采用哪种环境。
+
+目标对齐值：`P95 <= 490ms`。
+
+#### 交付物
+
+- `benchmarks/retrieval/retrieval-dataset.jsonl`。
+- `RetrievalBenchmarkRunner`。
+- `reports/retrieval-<timestamp>.json`。
+- `reports/retrieval-<timestamp>.md`。
+- 四种检索方案对比表。
+
+---
+
+### M19B：RAG Accuracy Benchmark —— 问答准确率 83%
+
+#### 目标
+
+把“问答准确率 83%”定义成可重复评测，而不是凭主观印象。
+
+#### 数据集
+
+建议至少 200 条 QA，其中包含：
+
+- 单文档直接事实题。
+- 多片段综合题。
+- 跨文档比较题。
+- 多轮上下文相关题。
+- 无证据/应拒答题。
+
+每条样本至少保存 `referenceAnswer`、`requiredFacts`、可接受引用范围和 `answerable` 标记。
+
+#### 正确性判定
+
+一个可回答样本只有同时满足以下条件才记为 `CORRECT`：
+
+1. 必需事实覆盖达到该样本定义的阈值。
+2. 没有与参考答案冲突的关键事实。
+3. 核心陈述有真实引用支撑。
+4. 引用对应本次检索上下文中的真实 chunk。
+
+无答案样本单独计算拒答准确率，不能把正确拒答混入普通 QA Accuracy。
+
+```text
+QA Accuracy
+= CORRECT 的可回答样本数 / 可回答样本总数
+```
+
+目标对齐值：`QA Accuracy >= 83%`。
+
+优先使用人工标注作为最终依据；可以增加 LLM-as-judge 辅助评审，但必须固定 judge 模型、温度、提示词和版本，并抽样人工复核，不能只使用一次不可复现的模型打分。
+
+#### 交付物
+
+- `benchmarks/rag/qa-dataset.jsonl`。
+- `RagAccuracyBenchmarkRunner`。
+- 错题明细：问题、答案、引用、失败原因。
+- 总体准确率 + 按题型准确率。
+
+---
+
+### M19C：Agent Task Benchmark —— 多轮任务完成率 89%
+
+#### 目标
+
+为 Retrieval-First、ReAct、Plan-Execute-Reflect 建立统一任务集，验证多轮 Agent 的真实任务完成能力。
+
+#### 数据集
+
+固定至少 100 个任务，建议分布：
+
+| 模式 | 任务数 | 典型任务 |
+|---|---:|---|
+| Retrieval-First | 30 | 单/多轮知识检索、指代消解 |
+| ReAct | 35 | 多次检索、文档元数据/上下文工具组合 |
+| Plan-Execute-Reflect | 35 | 跨文档比较、多步骤计划、证据缺口后重规划 |
+
+必须覆盖：
+
+- 单文档事实查询。
+- 跨文档比较。
+- 多轮省略和指代。
+- 多次工具调用。
+- 多步检索。
+- 信息不足时拒答。
+- 工具失败后的受控处理。
+- Plan 执行过程中一次受限重规划。
+
+#### 成功定义
+
+每个 case 在数据集中定义结构化 success criteria，例如：
+
+```json
+{
+  "caseId": "AGENT-042",
+  "mode": "PLAN_EXECUTE_REFLECT",
+  "maxTurns": 4,
+  "requiredFacts": ["A", "B"],
+  "requiredToolCalls": ["searchKnowledgeBase"],
+  "forbiddenBehaviors": ["crossKnowledgeBaseAccess"],
+  "mustHaveValidCitation": true
+}
+```
+
+只有最终答案、引用、工具约束和任务状态全部满足才算成功。
+
+```text
+TaskSuccessRate
+= 成功任务数 / 总任务数 × 100%
+```
+
+目标对齐值：`>= 89%`，例如固定 100 个任务时至少成功 89 个。
+
+报告必须同时给出三个模式各自成功率，禁止只汇总总体数据而掩盖某个 Agent 模式明显失效。
+
+#### 交付物
+
+- `benchmarks/agent/agent-tasks.jsonl`。
+- `AgentBenchmarkRunner`。
+- 每个失败任务的 step/tool/error 摘要。
+- 总体及各 Agent 模式成功率。
+
+---
+
+### M19D：Memory & Recovery Benchmark —— 会话丢失率 < 0.5%
+
+#### 目标
+
+证明 Redis 短期记忆 + MySQL 持久历史 + M17 Checkpoint 的组合能够在故障后恢复，而不是只验证正常路径。
+
+#### 故障注入
+
+建议执行至少 1000 次恢复样本，随机注入：
+
+- Redis key 丢失/TTL 到期。
+- Redis 重启。
+- 应用进程重启。
+- Agent 在步骤边界中断。
+- Worker 被终止后重新消费。
+- WebSocket 断开并重新连接。
+
+注意：WebSocket 断线本身不应造成会话丢失，因为 REST/MySQL/Checkpoint 才是权威状态。
+
+#### “会话丢失”严格定义
+
+发生以下任一情况记为一次 `SESSION_LOST`：
+
+- 已成功持久化的用户消息无法恢复。
+- 已完成的助手最终消息无法恢复。
+- 恢复后 conversation 与原 knowledgeBaseId/消息顺序不一致。
+- 可恢复 execution 因检查点缺失只能从头重复执行且产生不一致结果。
+
+Redis 缓存被清空后能从 MySQL 重建，不算丢失。WebSocket 事件丢失但 REST 能恢复权威状态，也不算会话丢失。
+
+```text
+SessionLossRate
+= SESSION_LOST 数 / 总恢复尝试数 × 100%
+```
+
+目标对齐值：`< 0.5%`。使用 1000 个恢复样本时，最多允许 4 个真正不可恢复样本才能严格满足 `<0.5%`。
+
+#### 交付物
+
+- 故障注入脚本。
+- `RecoveryBenchmarkRunner`。
+- 每次故障类型、恢复耗时、是否恢复成功。
+- SessionLossRate 和 RecoverySuccessRate。
+
+---
+
+### M19E：RabbitMQ Performance Benchmark —— 7.25s → 0.25s 与 2.3×
+
+#### 目标
+
+用同一硬件、同一文档集合比较“同步串行处理”和“RabbitMQ 分段异步 Worker Pool”，证明长文档分段消费带来的等待时间与吞吐改善。
+
+#### 必须先定义指标口径
+
+为了避免面试时混淆“接口响应时间”和“队列等待时间”，报告必须同时记录：
+
+```text
+submit_ack_latency
+= 请求到达 -> 服务端完成持久化并确认已接收任务
+
+queue_wait_latency
+= batch enqueued_at -> batch started_at
+
+processing_latency
+= batch started_at -> batch completed_at
+
+end_to_end_latency
+= 文档提交 -> DOCUMENT_READY
+
+throughput
+= 单位时间内完成的 chunk batch 数或文档数
+```
+
+简历中的“7.25s → 0.25s”必须明确绑定其中一个指标。推荐绑定 `submit_ack_latency` 或在最终简历中改写成“上传请求平均阻塞时间”，因为异步化最直接降低的是用户提交后等待服务端返回的时间。若最终真实实验采用的是 `queue_wait_latency`，则必须在报告和面试中统一使用该口径。
+
+#### A/B 基线
+
+A 组：同步基线。
+
+```text
+POST document
+-> parse
+-> chunk
+-> embedding/index
+-> response
+```
+
+B 组：异步分段。
+
+```text
+POST document
+-> save metadata/file
+-> publish DocumentIngestTask
+-> ACK response
+-> parse/chunk
+-> split ChunkBatchTask
+-> RabbitMQ Worker Pool 并行处理
+```
+
+#### 推荐固定负载
+
+- 文档数：100。
+- 长文档占比：至少 50%。
+- 平均 chunk 数和文件大小必须在报告中记录。
+- 并发提交：20。
+- `batchSize=50` 作为初始值，再测试 25/50/100。
+- consumer concurrency：1/2/4/8。
+- prefetch：配置化并记录。
+- 同一轮 A/B 使用相同数据、相同模型策略和相同硬件。
+
+为了隔离外部模型限流/网络抖动对 MQ 架构比较的影响，性能回归可以使用确定性 fake/local embedding 与固定延迟 reranker；如果简历最终引用该性能数字，必须在报告中明确测试 profile。若使用真实外部模型，也必须记录供应商配额和失败重试。
+
+#### 目标对齐值
+
+- 目标等待指标：约 `7.25s -> 0.25s`。
+- 峰值稳定吞吐量：异步方案 / 同步方案 `>= 2.3×`。
+
+```text
+ThroughputGain
+= AsyncPeakStableThroughput / SyncPeakStableThroughput
+```
+
+“峰值稳定吞吐量”不能取瞬时最高点；建议以连续稳定窗口（例如 60s）内错误率低于既定阈值时的最高吞吐作为结果。
+
+#### 交付物
+
+- `benchmarks/rabbitmq/` 下的测试数据和 PowerShell/k6/JMeter 脚本。
+- sync/async 两套 profile。
+- 不同 consumer concurrency 和 batchSize 的实验矩阵。
+- 等待时间、P95、吞吐、错误率、CPU、内存、队列深度曲线或数据表。
+- 最终原始 CSV/JSON 和 Markdown 报告。
+
+---
+
+### 简历指标证据矩阵
+
+| 简历描述 | 代码/模块证据 | Benchmark 证据 |
+|---|---|---|
+| Retrieval-First | M14 | M19C |
+| ReAct | M15 | M19C |
+| Plan-Execute-Reflect | M16 | M19C |
+| 多轮任务完成率 89% | M14-M17 | M19C `TaskSuccessRate` |
+| BM25 | M08 | M19A 对照实验 |
+| Cross-Encoder 重排 | M10 | M19A 对照实验 |
+| Top-5 召回率 91% | M07-M10 | M19A `Recall@5` |
+| 问答准确率 83% | M11-M12 | M19B `QA Accuracy` |
+| P95 490ms | M07-M10 | M19A `retrieval_latency` |
+| Redis 多轮记忆 | M12 | M19D |
+| 任务中断续接 | M17 | M19D |
+| 会话丢失率 <0.5% | M12 + M17 | M19D `SessionLossRate` |
+| RabbitMQ 异步解耦 | M06 | M19E |
+| 长文档分段异步消费 | M06 两级任务模型 | M19E |
+| 等待 7.25s → 0.25s | M06 时间戳埋点 | M19E A/B |
+| 峰值吞吐量提升 2.3× | M06 Worker Pool | M19E `ThroughputGain` |
 
 ### 可观测实现
 
 - Spring Boot Actuator + Micrometer。
 - 自定义指标使用低基数标签，禁止把 documentId、conversationId 当作指标标签。
 - 日志携带 traceId、executionId（字段可高基数，但不进入指标 tag）。
+- 为 retrieval、rerank、agent step、RabbitMQ batch 建立 Timer/Counter/Gauge。
+- `document_batch_task` 的时间戳作为 MQ 性能报告的事实来源，Micrometer 用于实时监控，两者可以交叉校验。
 - 健康检查区分 liveness 与 readiness；外部模型故障通常不应让进程 liveness 失败。
 
-### 验收标准
+### M19 总体验收标准
 
-- 一条命令可运行离线检索评测并输出 JSON/Markdown 结果。
-- 结果基于真实运行数据，失败项不会被过滤。
-- 可比较四种检索配置。
-- 提供最小负载测试并报告环境、并发、样本量、P50/P95/P99、错误率。
-- 不使用没有来源的虚构性能数字。
+- 一条命令可分别运行 M19A～M19E，并输出 JSON/Markdown 结果。
+- 数据集和脚本全部版本化，结果可以追溯到 Git commit。
+- 所有失败项都保留，不允许只统计成功请求。
+- 可以比较 Vector、BM25、RRF、RRF+Rerank 四种配置。
+- 报告明确区分 QA Accuracy、拒答准确率、Agent Task Success Rate、Session Loss Rate。
+- 性能报告包含环境、并发、样本量、P50/P95/P99、错误率和原始结果。
+- 91%、83%、490ms、89%、<0.5%、7.25→0.25、2.3× 均能追溯到具体脚本、原始数据和计算公式。
+- 没有达到目标时，报告真实值并记录优化过程，不伪造达标。
 
 ### 模块提示词
 
 ```text
-执行 M19 评测、压测与可观测性模块。
-建立版本化离线评测数据格式和运行器，计算 Recall@K、MRR、nDCG@K，并对比向量、BM25、RRF、RRF+rerank。
-实现引用有效率、拒答测试和基础结果报告；LLM 评审如启用必须可关闭并记录模型/提示词。
-通过 Actuator/Micrometer 增加文档摄取、检索、模型和 Agent 指标，严格控制 tag 基数。
-增加 readiness/liveness 设计和结构化日志关联字段。
-提供可复现的小型负载测试脚本，报告真实环境与真实结果，不得编造数字。
-测试指标注册、评测公式和失败样本保留。
+执行 M19 评测、压测与可观测性模块，并拆分完成 M19A～M19E。
+
+M19A：建立至少 200 条人工标注 Retrieval 数据，计算 Vector/BM25/RRF/RRF+Cross-Encoder 的 Recall@5、MRR、nDCG@5；固定 retrieval_latency 口径为 query embedding + vector + BM25 + RRF + rerank，不包含最终 ChatModel 生成，输出 P50/P95/P99。
+M19B：建立至少 200 条 QA 数据，定义 requiredFacts、answerable 和真实引用范围，计算 QA Accuracy 与拒答准确率。
+M19C：建立固定 100 个 Agent 任务，覆盖 Retrieval-First/ReAct/Plan-Execute-Reflect，多轮、工具调用、跨文档和重规划；按结构化 success criteria 计算 TaskSuccessRate。
+M19D：执行至少 1000 次恢复样本，注入 Redis 丢失/重启、应用重启、Agent 中断、Worker 中断和 WebSocket 断线，计算 SessionLossRate 与恢复耗时。
+M19E：使用同一数据和硬件做同步串行 vs RabbitMQ 分段异步 A/B，至少记录 submit_ack_latency、queue_wait_latency、processing_latency、end_to_end_latency、throughput、错误率、CPU/内存、queue depth，并测试 batchSize 及 consumer concurrency。
+
+目标对齐值是 Recall@5 91%、QA Accuracy 83%、retrieval P95 490ms、Agent TaskSuccessRate 89%、SessionLossRate <0.5%、等待指标约 7.25s->0.25s、吞吐提升 2.3x。它们只能由真实 Benchmark 产生；若未达标必须输出真实结果，严禁硬编码、删除失败样本、修改公式或模糊统计口径。
+
+通过 Actuator/Micrometer 增加文档摄取、检索、模型、Agent、RabbitMQ batch 指标，严格控制 tag 基数。
+所有报告记录 Git commit、数据集版本、模型/配置、硬件环境和测试时间，并保存原始 JSON/CSV 与 Markdown 汇总。
+测试评测公式本身，确保空数据、重复样本、失败请求和异常结果不会被静默忽略。
 ```
 
 ---
@@ -1536,7 +1975,9 @@ stateDiagram-v2
 - `docs/architecture.md`：模块、数据流、关键决策。
 - `docs/api.md` 或 OpenAPI 页面说明。
 - `docs/operations.md`：健康检查、日志、备份、常见故障。
-- `docs/evaluation.md`：数据集、指标、真实基准结果。
+- `docs/evaluation.md`：M19A～M19E 数据集版本、公式、环境、真实基准结果和限制。
+- `benchmarks/`：Retrieval、RAG、Agent、Recovery、RabbitMQ 的数据集、脚本和原始报告。
+- `docs/resume-evidence.md`：简历每一条描述对应的代码入口、测试脚本、指标公式和最终真实结果。
 - `docs/development-progress.md`：完成情况和限制。
 - `.env.example`：全部必要变量，无真实秘密。
 - 演示脚本：创建知识库、上传文档、等待 READY、提问、查看引用。
@@ -1555,6 +1996,8 @@ PowerShell 流程至少覆盖：
 8. 创建会话并提问。
 9. 验证答案至少有一个真实引用。
 10. 重启应用并验证数据存在。
+11. 运行 Retrieval/RAG/Agent/Recovery/RabbitMQ 五套 Benchmark 的最小 smoke 集。
+12. 检查 `docs/resume-evidence.md` 中每个简历数字都能链接到实际报告。
 
 ### 验收标准
 
@@ -1680,7 +2123,12 @@ feat: add controlled react agent
 feat: add plan execute reflect agent
 feat: add execution checkpoints
 feat: add websocket progress events
-test: add retrieval and agent evaluation
+test: add retrieval benchmark and latency evaluation
+test: add rag accuracy benchmark
+test: add agent task success benchmark
+test: add recovery fault injection benchmark
+perf: add rabbitmq sync async benchmark
+docs: add resume evidence matrix
 docs: add reproducible deployment guide
 ```
 
@@ -1723,9 +2171,13 @@ git diff --check
 ### 性能
 
 1. Embedding、数据库写入和索引是否批量执行？
-2. 大文件处理的峰值内存如何限制？
-3. 外部调用的超时预算如何在整条链路中分配？
-4. 指标是否错误使用了高基数标签？
+2. 长文档是否真正拆成 ChunkBatchTask 并由多个消费者并行消费，而不是“一份文档一条大消息”？
+3. `7.25s → 0.25s` 到底对应 submit_ack、queue_wait 还是其他指标，代码和报告是否统一？
+4. `2.3×` 的分母和分子分别是什么，是否使用同一硬件、数据集和模型 profile？
+5. P95 490ms 是否明确只统计 retrieval pipeline，而不是把远程 LLM 生成时间混在一起？
+6. 大文件处理的峰值内存如何限制？
+7. 外部调用的超时预算如何在整条链路中分配？
+8. 指标是否错误使用了高基数标签？
 
 ---
 
@@ -1749,7 +2201,12 @@ git diff --check
 ### 质量
 
 - [ ] 单元、集成和端到端测试可复现。
-- [ ] 检索评测结果可生成且不伪造。
+- [ ] M19A Retrieval Benchmark 可生成 Recall@5/MRR/nDCG 与 P50/P95/P99，且统计口径明确。
+- [ ] M19B RAG Benchmark 可生成 QA Accuracy 与拒答准确率。
+- [ ] M19C Agent Benchmark 可生成三种 Agent 的 TaskSuccessRate。
+- [ ] M19D 故障注入可生成 SessionLossRate 与恢复耗时。
+- [ ] M19E 同步/异步 A/B 可生成等待时间、吞吐、错误率和资源使用对比。
+- [ ] 简历中的 91%、83%、490ms、89%、<0.5%、7.25→0.25、2.3× 均有原始数据和公式可追溯；未真实达到的数字不得写成已达成。
 - [ ] 关键异常路径有稳定错误码。
 - [ ] 所有外部调用有超时和有限重试。
 - [ ] 无跨知识库数据泄露。
@@ -1783,7 +2240,7 @@ git diff --check
 | B | M04–M06 | 后台解析、切分、状态更新与失败重试 |
 | C | M07–M11 | 混合检索并生成带真实引用的答案 |
 | D | M12–M18 | 多轮会话、三种 Agent、恢复和实时进度 |
-| E | M19–M20 | 可评测、可监控、一键复现和演示 |
+| E | M19A–M19E + M20 | 所有简历指标有真实 Benchmark 证据、可监控、一键复现和演示 |
 
 如果某个阶段的端到端演示失败，应先修复该阶段，不要继续堆叠新模块。
 

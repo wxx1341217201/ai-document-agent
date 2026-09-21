@@ -27,8 +27,17 @@ spring:
       timeout: 3s
 
   rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
+    virtual-host: ${RABBITMQ_VHOST:/}
     connection-timeout: 3s
     requested-heartbeat: 15s
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    template:
+      mandatory: true
 
   elasticsearch:
     connection-timeout: 3s
@@ -41,6 +50,9 @@ spring:
     properties:
       hibernate:
         format_sql: true
+        jdbc:
+          batch_size: ${CHUNKING_PERSISTENCE_BATCH_SIZE:100}
+        order_inserts: true
 
   flyway:
     enabled: true
@@ -53,8 +65,63 @@ spring:
       qdrant:
         initialize-schema: false
 
+  servlet:
+    multipart:
+      max-file-size: ${DOCUMENT_MAX_FILE_SIZE:20MB}
+      max-request-size: ${DOCUMENT_MAX_REQUEST_SIZE:21MB}
+
+app:
+  document:
+    storage-root: ${DOCUMENT_STORAGE_ROOT:./data/documents}
+    max-file-size: ${DOCUMENT_MAX_FILE_SIZE:20MB}
+  chunking:
+    strategy: ${CHUNKING_STRATEGY:paragraph}
+    window-unit: ${CHUNKING_WINDOW_UNIT:TOKEN}
+    chunk-size: ${CHUNKING_CHUNK_SIZE:900}
+    overlap: ${CHUNKING_OVERLAP:120}
+    persistence-batch-size: ${CHUNKING_PERSISTENCE_BATCH_SIZE:100}
+  ingestion:
+    enabled: ${INGESTION_ENABLED:true}
+    batch-size: ${INGESTION_BATCH_SIZE:50}
+    listener-concurrency: ${INGESTION_LISTENER_CONCURRENCY:3}
+    listener-max-concurrency: ${INGESTION_LISTENER_MAX_CONCURRENCY:8}
+    prefetch: ${INGESTION_PREFETCH:20}
+    max-attempts: ${INGESTION_MAX_ATTEMPTS:3}
+    retry-initial-delay: ${INGESTION_RETRY_INITIAL_DELAY:5s}
+    retry-max-delay: ${INGESTION_RETRY_MAX_DELAY:5m}
+    publisher-confirm-timeout: ${INGESTION_PUBLISHER_CONFIRM_TIMEOUT:5s}
+    stale-processing-timeout: ${INGESTION_STALE_PROCESSING_TIMEOUT:30m}
+    outbox:
+      scan-delay: ${INGESTION_OUTBOX_SCAN_DELAY:5s}
+      batch-size: ${INGESTION_OUTBOX_SCAN_BATCH_SIZE:100}
+      dispatch-lease: ${INGESTION_OUTBOX_DISPATCH_LEASE:30s}
+      max-publish-attempts: ${INGESTION_OUTBOX_MAX_PUBLISH_ATTEMPTS:5}
+    messaging:
+      document-exchange: ${INGESTION_DOCUMENT_EXCHANGE:document.ingestion.exchange}
+      document-queue: ${INGESTION_DOCUMENT_QUEUE:document.ingestion.queue}
+      document-routing-key: ${INGESTION_DOCUMENT_ROUTING_KEY:document.ingestion.requested}
+      document-retry-exchange: ${INGESTION_DOCUMENT_RETRY_EXCHANGE:document.ingestion.retry.exchange}
+      document-retry-queue: ${INGESTION_DOCUMENT_RETRY_QUEUE:document.ingestion.retry.queue}
+      document-retry-routing-key: ${INGESTION_DOCUMENT_RETRY_ROUTING_KEY:document.ingestion.retry}
+      document-dead-letter-exchange: ${INGESTION_DOCUMENT_DLX:document.ingestion.dlx}
+      document-dead-letter-queue: ${INGESTION_DOCUMENT_DLQ:document.ingestion.dlq}
+      document-dead-letter-routing-key: ${INGESTION_DOCUMENT_DLQ_ROUTING_KEY:document.ingestion.dead}
+      batch-exchange: ${INGESTION_BATCH_EXCHANGE:document.batch.exchange}
+      batch-queue: ${INGESTION_BATCH_QUEUE:document.batch.queue}
+      batch-routing-key: ${INGESTION_BATCH_ROUTING_KEY:document.batch.requested}
+      batch-retry-exchange: ${INGESTION_BATCH_RETRY_EXCHANGE:document.batch.retry.exchange}
+      batch-retry-queue: ${INGESTION_BATCH_RETRY_QUEUE:document.batch.retry.queue}
+      batch-retry-routing-key: ${INGESTION_BATCH_RETRY_ROUTING_KEY:document.batch.retry}
+      batch-dead-letter-exchange: ${INGESTION_BATCH_DLX:document.batch.dlx}
+      batch-dead-letter-queue: ${INGESTION_BATCH_DLQ:document.batch.dlq}
+      batch-dead-letter-routing-key: ${INGESTION_BATCH_DLQ_ROUTING_KEY:document.batch.dead}
+
 server:
   port: 8080
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} [traceId=%X{traceId:-}] - %msg%n"
 
 management:
   health:

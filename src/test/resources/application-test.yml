@@ -27,3 +27,10 @@ management:
       enabled: false
     redis:
       enabled: false
+
+app:
+  ingestion:
+    enabled: false
+  document:
+    storage-root: ${java.io.tmpdir}/ai-document-agent-test-documents
+    max-file-size: 1MB
