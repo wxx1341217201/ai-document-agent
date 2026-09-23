@@ -48,7 +48,7 @@ public class DocumentBatchTask {
     private int chunkTo;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 32, updatable = false)
+    @Column(nullable = false, length = 32)
     private ChunkBatchStage stage;
 
     @Enumerated(EnumType.STRING)
@@ -75,6 +75,7 @@ public class DocumentBatchTask {
 
     @Version
     @Column(nullable = false)
+    /** 与 batchId 和当前 stage 共同构成可重放阶段状态的并发保护，不依赖 RabbitMQ 恰好一次投递。 */
     private long version;
 
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -97,7 +98,7 @@ public class DocumentBatchTask {
         this.batchNo = batchNo;
         this.chunkFrom = chunkFrom;
         this.chunkTo = chunkTo;
-        this.stage = ChunkBatchStage.INDEX;
+        this.stage = ChunkBatchStage.VECTOR_INDEX;
         this.status = BatchTaskStatus.PENDING_DISPATCH;
     }
 
@@ -153,8 +154,23 @@ public class DocumentBatchTask {
         setError(code, message);
     }
 
+    /** 向量成功后只能进入尚未投递的关键词阶段；该转换由同一 batchId + JPA version 串行保护。 */
+    public void advanceToKeywordIndex() {
+        if (stage != ChunkBatchStage.VECTOR_INDEX || status != BatchTaskStatus.PROCESSING) {
+            throw new IllegalStateException("batch不能从" + stage + "/" + status + "推进到KEYWORD_INDEX");
+        }
+        stage = ChunkBatchStage.KEYWORD_INDEX;
+        status = BatchTaskStatus.PENDING_DISPATCH;
+        attempt = 0;
+        enqueuedAt = null;
+        startedAt = null;
+        completedAt = null;
+        clearError();
+    }
+
+    /** 只有关键词阶段成功才可终结 batch，因而 job 不会在仅完成 vector 后聚合为 READY。 */
     public void markCompleted(LocalDateTime now) {
-        if (status != BatchTaskStatus.PROCESSING) {
+        if (stage != ChunkBatchStage.KEYWORD_INDEX || status != BatchTaskStatus.PROCESSING) {
             throw new IllegalStateException("batch不能从" + status + "转换为COMPLETED");
         }
         status = BatchTaskStatus.COMPLETED;
@@ -207,4 +223,5 @@ public class DocumentBatchTask {
     public LocalDateTime getCompletedAt() { return completedAt; }
     public String getErrorCode() { return errorCode; }
     public String getErrorMessage() { return errorMessage; }
+    public long getVersion() { return version; }
 }

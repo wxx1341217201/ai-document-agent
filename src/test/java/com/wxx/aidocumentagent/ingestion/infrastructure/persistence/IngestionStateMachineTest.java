@@ -4,19 +4,29 @@ import java.time.LocalDateTime;
 
 import org.junit.jupiter.api.Test;
 
+import com.wxx.aidocumentagent.ingestion.domain.ChunkBatchStage;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class IngestionStateMachineTest {
 
     @Test
-    void 同一batch重复投递只能被第一个消费者领取和完成() {
+    void 同一batch必须从向量合法推进到关键词再完成() {
         DocumentIngestionJob job = processingJob();
         DocumentBatchTask task = DocumentBatchTask.create(job, 0, 0, 49);
         task.markQueued(LocalDateTime.now());
 
+        assertThat(task.getStage()).isEqualTo(ChunkBatchStage.VECTOR_INDEX);
+
         assertThat(task.beginProcessing(LocalDateTime.now())).isTrue();
         assertThat(task.beginProcessing(LocalDateTime.now())).isFalse();
+        assertThatThrownBy(() -> task.markCompleted(LocalDateTime.now())).isInstanceOf(IllegalStateException.class);
+        task.advanceToKeywordIndex();
+        assertThat(task.getStage()).isEqualTo(ChunkBatchStage.KEYWORD_INDEX);
+        assertThat(task.getStatus()).isEqualTo(com.wxx.aidocumentagent.ingestion.domain.BatchTaskStatus.PENDING_DISPATCH);
+        task.markQueued(LocalDateTime.now());
+        assertThat(task.beginProcessing(LocalDateTime.now())).isTrue();
         task.markCompleted(LocalDateTime.now());
 
         assertThat(task.beginProcessing(LocalDateTime.now())).isFalse();

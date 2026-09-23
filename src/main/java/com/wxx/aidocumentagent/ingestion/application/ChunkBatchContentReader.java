@@ -36,9 +36,8 @@ public class ChunkBatchContentReader {
                 || task.getChunkFrom() != work.chunkFrom() || task.getChunkTo() != work.chunkTo()) {
             throw new IngestionMessageValidationException(IngestionErrorCode.INGESTION_SCOPE_MISMATCH.defaultMessage());
         }
-        if (documentRepository.findByIdAndKnowledgeBaseId(work.documentId(), work.knowledgeBaseId()).isEmpty()) {
-            throw new IngestionMessageValidationException("batch所属文档不存在或知识库不匹配");
-        }
+        var document = documentRepository.findByIdAndKnowledgeBaseId(work.documentId(), work.knowledgeBaseId())
+                .orElseThrow(() -> new IngestionMessageValidationException("batch所属文档不存在或知识库不匹配"));
         List<DocumentChunk> chunks = chunkRepository
                 .findByKnowledgeBaseIdAndDocumentIdAndChunkIndexBetweenOrderByChunkIndexAsc(work.knowledgeBaseId(),
                         work.documentId(), work.chunkFrom(), work.chunkTo());
@@ -47,7 +46,8 @@ public class ChunkBatchContentReader {
             throw new IllegalStateException(IngestionErrorCode.INGESTION_BATCH_CHUNK_MISMATCH.defaultMessage());
         }
         return new ChunkBatchIndexingRequest(work.batchId(), work.jobId(), work.knowledgeBaseId(), work.documentId(),
-                work.chunkFrom(), work.chunkTo(), chunks.stream().map(this::toIndexableChunk).toList());
+                work.chunkFrom(), work.chunkTo(), document.getOriginalName(),
+                chunks.stream().map(this::toIndexableChunk).toList());
     }
 
     private boolean isContiguous(List<DocumentChunk> chunks, int chunkFrom) {

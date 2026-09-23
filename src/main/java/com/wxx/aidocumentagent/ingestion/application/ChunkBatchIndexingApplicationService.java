@@ -22,7 +22,7 @@ public class ChunkBatchIndexingApplicationService {
     public void process(ChunkBatchMessage message) {
         lifecycleService.claim(message).ifPresent(work -> {
             ChunkBatchIndexingRequest request = contentReader.read(work);
-            indexingProcessor.process(request);
+            indexingProcessor.process(work.stage(), request);
             lifecycleService.complete(work);
         });
     }

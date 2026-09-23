@@ -1,7 +1,9 @@
 package com.wxx.aidocumentagent.ingestion.application;
 
-/** M07/M08 通过替换此端口接入向量与关键词索引，而不改动队列调度和状态机。 */
+import com.wxx.aidocumentagent.ingestion.domain.ChunkBatchStage;
+
+/** M08 通过持久化 stage 选择唯一实际索引器，不改动队列调度和状态机边界。 */
 public interface ChunkBatchIndexingProcessor {
 
-    void process(ChunkBatchIndexingRequest request);
+    void process(ChunkBatchStage stage, ChunkBatchIndexingRequest request);
 }

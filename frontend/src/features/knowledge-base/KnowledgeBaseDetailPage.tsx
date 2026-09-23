@@ -2,7 +2,7 @@ import { EditOutlined, MessageOutlined, UploadOutlined } from '@ant-design/icons
 import { Button, Descriptions, Tabs } from 'antd';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { EmptyState, ErrorResult, PageError, PageLoading } from '../../components/feedback';
+import { ErrorResult, PageError, PageLoading } from '../../components/feedback';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { useUiStore } from '../../stores/ui.store';
 import { formatDateTime } from '../../utils/format';
@@ -10,6 +10,7 @@ import { parsePositiveRouteId } from '../../utils/route-params';
 import { DocumentTable } from '../document/DocumentTable';
 import { DocumentUploadDragger } from '../document/DocumentUploadDragger';
 import { KnowledgeBaseFormModal } from './KnowledgeBaseFormModal';
+import { QuickQueryPanel } from './QuickQueryPanel';
 import { useKnowledgeBase, useUpdateKnowledgeBase } from './knowledge-base.hooks';
 
 export function KnowledgeBaseDetailPage() {
@@ -109,12 +110,7 @@ export function KnowledgeBaseDetailPage() {
           {
             key: 'quick-query',
             label: '快速问答',
-            children: (
-              <EmptyState
-                title="快速问答将在 FE05 接入"
-                description="届时会使用后端返回的答案、引用和降级提示，不在浏览器中生成引用。"
-              />
-            ),
+            children: <QuickQueryPanel knowledgeBaseId={knowledgeBase.id} />,
           },
           {
             key: 'info',

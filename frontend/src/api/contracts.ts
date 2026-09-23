@@ -84,3 +84,33 @@ export interface PaginationParams {
   page: number;
   size: number;
 }
+
+/** Input accepted by the non-streaming knowledge-base query endpoint. */
+export interface RagQueryRequest {
+  question: string;
+  topK: number;
+  rerank: boolean;
+}
+
+/** A verified source reference returned with one RAG answer. */
+export interface RagCitation {
+  citationId: string;
+  documentId: number;
+  documentName: string;
+  chunkId: number;
+  pageFrom: number | null;
+  pageTo: number | null;
+  quote: string;
+}
+
+/** Retrieval health summary returned by the backend with a RAG answer. */
+export interface RagRetrievalSummary {
+  degraded: boolean;
+  candidateCount: number;
+}
+
+export interface RagQueryResponse {
+  answer: string;
+  citations: RagCitation[];
+  retrieval: RagRetrievalSummary;
+}

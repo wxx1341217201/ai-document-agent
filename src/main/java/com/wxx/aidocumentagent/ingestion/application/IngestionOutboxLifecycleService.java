@@ -11,6 +11,7 @@ import com.wxx.aidocumentagent.document.infrastructure.persistence.Document;
 import com.wxx.aidocumentagent.document.infrastructure.persistence.DocumentRepository;
 import com.wxx.aidocumentagent.ingestion.IngestionProperties;
 import com.wxx.aidocumentagent.ingestion.domain.BatchTaskStatus;
+import com.wxx.aidocumentagent.ingestion.domain.ChunkBatchStage;
 import com.wxx.aidocumentagent.ingestion.domain.IngestionErrorCode;
 import com.wxx.aidocumentagent.ingestion.domain.OutboxDispatchMode;
 import com.wxx.aidocumentagent.ingestion.domain.OutboxEventStatus;
@@ -126,9 +127,11 @@ public class IngestionOutboxLifecycleService {
             }
             DocumentBatchTask task = batchTaskRepository.findByBatchIdAndKnowledgeBaseId(event.getBatchId(),
                     event.getKnowledgeBaseId()).orElseThrow(() -> new IngestionMessageValidationException("outbox batch不存在"));
+            // V6 前已入库 outbox 的 batch_stage 为 null，按当前持久化 stage 兼容一次；新事件始终读取固化值。
+            ChunkBatchStage stage = event.getBatchStage() == null ? task.getStage() : event.getBatchStage();
             return new OutboxDispatchEnvelope(event.getEventId(), event.getMessageType(), event.getDispatchMode(),
                     event.getRetryDelayMillis(), new ChunkBatchMessage(eventId, jobId, UUID.fromString(task.getBatchId()),
-                    task.getDocumentId(), task.getKnowledgeBaseId(), task.getChunkFrom(), task.getChunkTo(), task.getStage(),
+                    task.getDocumentId(), task.getKnowledgeBaseId(), task.getChunkFrom(), task.getChunkTo(), stage,
                     event.getMessageAttempt(), ChunkBatchMessage.SCHEMA_VERSION));
         }
         catch (IllegalArgumentException exception) {
@@ -150,7 +153,7 @@ public class IngestionOutboxLifecycleService {
     private void markBatchQueued(DocumentIngestionOutboxEvent event) {
         DocumentBatchTask task = batchTaskRepository.findLockedByBatchIdAndKnowledgeBaseId(event.getBatchId(),
                 event.getKnowledgeBaseId()).orElse(null);
-        if (task != null) {
+        if (task != null && (event.getBatchStage() == null || task.getStage() == event.getBatchStage())) {
             task.markQueued(LocalDateTime.now());
         }
     }

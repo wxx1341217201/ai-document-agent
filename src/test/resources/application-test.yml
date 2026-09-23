@@ -2,6 +2,8 @@ spring:
   ai:
     openai:
       api-key: test-key
+      embedding:
+        api-key: test-key
   autoconfigure:
     exclude:
       - org.springframework.ai.vectorstore.qdrant.autoconfigure.QdrantVectorStoreAutoConfiguration
@@ -29,6 +31,16 @@ management:
       enabled: false
 
 app:
+  keyword:
+    enabled: false
+  vector:
+    enabled: false
+  retrieval:
+    enabled: false
+  rerank:
+    enabled: false
+  rag:
+    enabled: false
   ingestion:
     enabled: false
   document:

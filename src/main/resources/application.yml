@@ -40,6 +40,10 @@ spring:
       mandatory: true
 
   elasticsearch:
+    uris: ${ELASTICSEARCH_URIS:http://localhost:9200}
+    username: ${ELASTICSEARCH_USERNAME:}
+    password: ${ELASTICSEARCH_PASSWORD:}
+    api-key: ${ELASTICSEARCH_API_KEY:}
     connection-timeout: 3s
     socket-timeout: 5s
 
@@ -61,9 +65,23 @@ spring:
   ai:
     openai:
       api-key: ${OPENAI_API_KEY}
-    vectorstore:
-      qdrant:
-        initialize-schema: false
+      # M11 additionally installs an official OpenAI HTTP customizer with distinct connect/read/request limits.
+      timeout: ${RAG_CHAT_REQUEST_TIMEOUT:30s}
+      max-retries: ${OPENAI_MAX_RETRIES:0}
+      chat:
+        # DeepSeek exposes an OpenAI-compatible Chat Completions endpoint.
+        base-url: ${RAG_CHAT_BASE_URL:https://api.deepseek.com}
+        api-key: ${RAG_CHAT_API_KEY:${OPENAI_API_KEY}}
+        model: ${RAG_CHAT_MODEL:deepseek-flash}
+        temperature: ${RAG_CHAT_TEMPERATURE:0.0}
+      embedding:
+        # Alibaba Cloud Model Studio exposes an OpenAI-compatible Embeddings endpoint.
+        base-url: ${VECTOR_EMBEDDING_BASE_URL:https://dashscope.aliyuncs.com/compatible-mode/v1}
+        api-key: ${VECTOR_EMBEDDING_API_KEY:${DASHSCOPE_API_KEY}}
+        model: ${app.vector.embedding.model}
+        dimensions: ${app.vector.embedding.dimensions}
+        timeout: ${app.vector.embedding.timeout}
+        max-retries: ${app.vector.embedding.max-retries}
 
   servlet:
     multipart:
@@ -115,6 +133,70 @@ app:
       batch-dead-letter-exchange: ${INGESTION_BATCH_DLX:document.batch.dlx}
       batch-dead-letter-queue: ${INGESTION_BATCH_DLQ:document.batch.dlq}
       batch-dead-letter-routing-key: ${INGESTION_BATCH_DLQ_ROUTING_KEY:document.batch.dead}
+  vector:
+    enabled: ${VECTOR_INDEX_ENABLED:true}
+    qdrant:
+      host: ${QDRANT_HOST:localhost}
+      http-port: ${QDRANT_HTTP_PORT:6333}
+      grpc-port: ${QDRANT_GRPC_PORT:6334}
+      # A new collection prevents dimension conflicts with the prior 1536-dimension default.
+      collection-name: ${QDRANT_COLLECTION:ai_document_chunks_dashscope_v4}
+      api-key: ${QDRANT_API_KEY:}
+      use-tls: ${QDRANT_USE_TLS:false}
+      initialization-strategy: ${QDRANT_INITIALIZATION_STRATEGY:CREATE_IF_MISSING}
+      distance: ${QDRANT_DISTANCE:COSINE}
+      connect-timeout: ${QDRANT_CONNECT_TIMEOUT:3s}
+      request-timeout: ${QDRANT_REQUEST_TIMEOUT:5s}
+    embedding:
+      model: ${VECTOR_EMBEDDING_MODEL:text-embedding-v4}
+      dimensions: ${VECTOR_EMBEDDING_DIMENSIONS:1024}
+      batch-size: ${VECTOR_EMBEDDING_BATCH_SIZE:32}
+      timeout: ${VECTOR_EMBEDDING_TIMEOUT:20s}
+      max-retries: ${VECTOR_EMBEDDING_MAX_RETRIES:2}
+  keyword:
+    enabled: ${KEYWORD_INDEX_ENABLED:true}
+    index-name: ${KEYWORD_INDEX_NAME:document_chunks_v1}
+    alias: ${KEYWORD_INDEX_ALIAS:document_chunks}
+    bulk-size: ${KEYWORD_INDEX_BULK_SIZE:100}
+  retrieval:
+    enabled: ${RETRIEVAL_ENABLED:true}
+    vector-top-k: ${RETRIEVAL_VECTOR_TOP_K:20}
+    keyword-top-k: ${RETRIEVAL_KEYWORD_TOP_K:20}
+    final-top-k: ${RETRIEVAL_FINAL_TOP_K:10}
+    rrf-k: ${RETRIEVAL_RRF_K:60}
+    vector-weight: ${RETRIEVAL_VECTOR_WEIGHT:1.0}
+    keyword-weight: ${RETRIEVAL_KEYWORD_WEIGHT:1.0}
+    vector-similarity-threshold: ${RETRIEVAL_VECTOR_SIMILARITY_THRESHOLD:0.0}
+    vector-timeout: ${RETRIEVAL_VECTOR_TIMEOUT:2s}
+    keyword-timeout: ${RETRIEVAL_KEYWORD_TIMEOUT:2s}
+    total-timeout: ${RETRIEVAL_TOTAL_TIMEOUT:3s}
+  rerank:
+    enabled: ${RERANK_ENABLED:false}
+    url: ${RERANK_URL:}
+    api-key: ${RERANK_API_KEY:}
+    api-key-header: ${RERANK_API_KEY_HEADER:Authorization}
+    api-key-prefix: "${RERANK_API_KEY_PREFIX:Bearer }"
+    max-candidates: ${RERANK_MAX_CANDIDATES:50}
+    max-text-length: ${RERANK_MAX_TEXT_LENGTH:4000}
+    connect-timeout: ${RERANK_CONNECT_TIMEOUT:2s}
+    read-timeout: ${RERANK_READ_TIMEOUT:5s}
+    max-retries: ${RERANK_MAX_RETRIES:1}
+    circuit-failure-threshold: ${RERANK_CIRCUIT_FAILURE_THRESHOLD:3}
+    circuit-open-duration: ${RERANK_CIRCUIT_OPEN_DURATION:30s}
+  rag:
+    enabled: ${RAG_ENABLED:true}
+    default-top-k: ${RAG_DEFAULT_TOP_K:8}
+    context-window-tokens: ${RAG_CONTEXT_WINDOW_TOKENS:16384}
+    reserved-output-tokens: ${RAG_RESERVED_OUTPUT_TOKENS:2048}
+    max-context-characters: ${RAG_MAX_CONTEXT_CHARACTERS:12000}
+    max-chunk-characters: ${RAG_MAX_CHUNK_CHARACTERS:3000}
+    min-chunk-characters: ${RAG_MIN_CHUNK_CHARACTERS:200}
+    quote-max-characters: ${RAG_QUOTE_MAX_CHARACTERS:500}
+    redundant-overlap-characters: ${RAG_REDUNDANT_OVERLAP_CHARACTERS:80}
+    connect-timeout: ${RAG_CHAT_CONNECT_TIMEOUT:3s}
+    read-timeout: ${RAG_CHAT_READ_TIMEOUT:30s}
+    chat-timeout: ${RAG_CHAT_REQUEST_TIMEOUT:30s}
+    model: ${RAG_CHAT_MODEL:deepseek-flash}
 
 server:
   port: 8080

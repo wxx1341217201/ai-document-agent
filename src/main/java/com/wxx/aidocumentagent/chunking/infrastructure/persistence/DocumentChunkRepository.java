@@ -1,5 +1,6 @@
 package com.wxx.aidocumentagent.chunking.infrastructure.persistence;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,6 +14,9 @@ public interface DocumentChunkRepository extends JpaRepository<DocumentChunk, Lo
 
     List<DocumentChunk> findByKnowledgeBaseIdAndDocumentIdAndChunkIndexBetweenOrderByChunkIndexAsc(
             long knowledgeBaseId, long documentId, int chunkFrom, int chunkTo);
+
+    /** RAG 引用只允许从当前知识库持久化的真实 chunk 回填，不能相信检索索引回传的元数据。 */
+    List<DocumentChunk> findByKnowledgeBaseIdAndIdIn(long knowledgeBaseId, Collection<Long> chunkIds);
 
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("delete from DocumentChunk chunk where chunk.knowledgeBaseId = :knowledgeBaseId "

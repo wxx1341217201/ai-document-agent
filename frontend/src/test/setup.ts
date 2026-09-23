@@ -11,6 +11,12 @@ afterEach(() => {
 afterAll(() => server.close());
 
 if (typeof window !== 'undefined') {
+  const nativeGetComputedStyle = window.getComputedStyle.bind(window);
+  Object.defineProperty(window, 'getComputedStyle', {
+    writable: true,
+    value: (element: Element) => nativeGetComputedStyle(element),
+  });
+
   Object.defineProperty(window, 'matchMedia', {
     writable: true,
     value: (query: string) => ({

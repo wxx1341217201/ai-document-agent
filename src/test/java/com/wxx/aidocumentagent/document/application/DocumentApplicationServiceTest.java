@@ -20,6 +20,8 @@ import com.wxx.aidocumentagent.document.storage.DocumentStorageProperties;
 import com.wxx.aidocumentagent.document.storage.StoredObject;
 import com.wxx.aidocumentagent.knowledgebase.domain.KnowledgeBaseErrorCode;
 import com.wxx.aidocumentagent.knowledgebase.infrastructure.persistence.KnowledgeBaseRepository;
+import com.wxx.aidocumentagent.keyword.KeywordIndex;
+import com.wxx.aidocumentagent.vector.VectorIndex;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,6 +30,7 @@ import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.util.unit.DataSize;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -57,6 +60,18 @@ class DocumentApplicationServiceTest {
 
     @Mock
     private DocumentStorage documentStorage;
+
+    @Mock
+    private ObjectProvider<VectorIndex> vectorIndexProvider;
+
+    @Mock
+    private VectorIndex vectorIndex;
+
+    @Mock
+    private ObjectProvider<KeywordIndex> keywordIndexProvider;
+
+    @Mock
+    private KeywordIndex keywordIndex;
 
     private DocumentApplicationService service;
 
@@ -199,9 +214,53 @@ class DocumentApplicationServiceTest {
         verify(documentRepository).flush();
     }
 
+    @Test
+    void 删除文档前按知识库边界清除向量() {
+        Document document = uploadedDocument(23L, KNOWLEDGE_BASE_ID, STORAGE_KEY, sha256(PDF_BYTES));
+        when(documentRepository.findByIdAndKnowledgeBaseId(23L, KNOWLEDGE_BASE_ID)).thenReturn(Optional.of(document));
+        when(vectorIndexProvider.getIfAvailable()).thenReturn(vectorIndex);
+        DocumentApplicationService vectorAwareService = new DocumentApplicationService(knowledgeBaseRepository,
+                documentRepository, documentStorage, new DocumentUploadValidator(storageProperties()), null,
+                vectorIndexProvider);
+
+        vectorAwareService.delete(KNOWLEDGE_BASE_ID, 23L);
+
+        InOrder inOrder = inOrder(vectorIndex, documentRepository, documentStorage);
+        inOrder.verify(vectorIndex).deleteByDocument(KNOWLEDGE_BASE_ID, 23L);
+        inOrder.verify(documentRepository).delete(document);
+        inOrder.verify(documentRepository).flush();
+        inOrder.verify(documentStorage).delete(STORAGE_KEY);
+    }
+
+    @Test
+    void 删除文档前按同一知识库边界清除关键词索引() {
+        Document document = uploadedDocument(23L, KNOWLEDGE_BASE_ID, STORAGE_KEY, sha256(PDF_BYTES));
+        when(documentRepository.findByIdAndKnowledgeBaseId(23L, KNOWLEDGE_BASE_ID)).thenReturn(Optional.of(document));
+        when(vectorIndexProvider.getIfAvailable()).thenReturn(vectorIndex);
+        when(keywordIndexProvider.getIfAvailable()).thenReturn(keywordIndex);
+        DocumentApplicationService indexAwareService = new DocumentApplicationService(knowledgeBaseRepository,
+                documentRepository, documentStorage, new DocumentUploadValidator(storageProperties()), null,
+                vectorIndexProvider, keywordIndexProvider);
+
+        indexAwareService.delete(KNOWLEDGE_BASE_ID, 23L);
+
+        InOrder inOrder = inOrder(vectorIndex, keywordIndex, documentRepository, documentStorage);
+        inOrder.verify(vectorIndex).deleteByDocument(KNOWLEDGE_BASE_ID, 23L);
+        inOrder.verify(keywordIndex).deleteByDocument(KNOWLEDGE_BASE_ID, 23L);
+        inOrder.verify(documentRepository).delete(document);
+        inOrder.verify(documentRepository).flush();
+        inOrder.verify(documentStorage).delete(STORAGE_KEY);
+    }
+
     private UploadDocumentCommand command(String originalName, String contentType, byte[] content) {
         return new UploadDocumentCommand(originalName, contentType, content.length,
                 () -> new ByteArrayInputStream(content));
+    }
+
+    private DocumentStorageProperties storageProperties() {
+        DocumentStorageProperties properties = new DocumentStorageProperties();
+        properties.setMaxFileSize(DataSize.ofMegabytes(1));
+        return properties;
     }
 
     private Document uploadedDocument(long id, long knowledgeBaseId, String storageKey, String sha256) {

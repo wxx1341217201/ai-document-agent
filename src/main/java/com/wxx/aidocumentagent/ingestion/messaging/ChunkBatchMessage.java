@@ -21,9 +21,14 @@ public record ChunkBatchMessage(
 
     public void validate() {
         if (eventId == null || jobId == null || batchId == null || documentId <= 0 || knowledgeBaseId <= 0
-                || chunkFrom < 0 || chunkTo < chunkFrom || stage != ChunkBatchStage.INDEX || attempt < 0
+                || chunkFrom < 0 || chunkTo < chunkFrom || stage == null || attempt < 0
                 || schemaVersion != SCHEMA_VERSION) {
             throw new IngestionMessageValidationException("chunk batch消息字段不合法");
         }
+    }
+
+    /** 将 M06 已投递但尚未消费的 INDEX 消息升级为 M07 的实际向量阶段。 */
+    public ChunkBatchStage normalizedStage() {
+        return stage.normalized();
     }
 }

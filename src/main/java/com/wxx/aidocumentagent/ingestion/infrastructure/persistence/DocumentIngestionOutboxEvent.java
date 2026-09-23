@@ -6,6 +6,7 @@ import java.util.UUID;
 import com.wxx.aidocumentagent.ingestion.domain.OutboxDispatchMode;
 import com.wxx.aidocumentagent.ingestion.domain.OutboxEventStatus;
 import com.wxx.aidocumentagent.ingestion.domain.OutboxMessageType;
+import com.wxx.aidocumentagent.ingestion.domain.ChunkBatchStage;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -43,6 +44,11 @@ public class DocumentIngestionOutboxEvent {
 
     @Column(name = "batch_id", length = 36, updatable = false)
     private String batchId;
+
+    /** 产生 outbox 事件时固化 stage，避免旧 vector 事件在任务推进后被解释成 keyword 消息。 */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "batch_stage", length = 32, updatable = false)
+    private ChunkBatchStage batchStage;
 
     @Column(name = "document_id", nullable = false, updatable = false)
     private long documentId;
@@ -99,6 +105,7 @@ public class DocumentIngestionOutboxEvent {
         this.dispatchMode = dispatchMode;
         this.jobId = job.getJobId();
         this.batchId = batchTask == null ? null : batchTask.getBatchId();
+        this.batchStage = batchTask == null ? null : batchTask.getStage();
         this.documentId = job.getDocumentId();
         this.knowledgeBaseId = job.getKnowledgeBaseId();
         this.messageAttempt = messageAttempt;
@@ -194,6 +201,7 @@ public class DocumentIngestionOutboxEvent {
     public OutboxDispatchMode getDispatchMode() { return dispatchMode; }
     public String getJobId() { return jobId; }
     public String getBatchId() { return batchId; }
+    public ChunkBatchStage getBatchStage() { return batchStage; }
     public long getDocumentId() { return documentId; }
     public long getKnowledgeBaseId() { return knowledgeBaseId; }
     public int getMessageAttempt() { return messageAttempt; }

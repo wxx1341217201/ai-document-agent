@@ -40,6 +40,7 @@ public class IngestionConfiguration {
     }
 
     @Bean
+    @ConditionalOnProperty(prefix = "app.keyword", name = "enabled", havingValue = "false")
     @ConditionalOnMissingBean(ChunkBatchIndexingProcessor.class)
     ChunkBatchIndexingProcessor noOpChunkBatchIndexingProcessor() {
         return new NoOpChunkBatchIndexingProcessor();

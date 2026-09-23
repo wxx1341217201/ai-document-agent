@@ -17,12 +17,16 @@ import com.wxx.aidocumentagent.ingestion.infrastructure.persistence.DocumentBatc
 import com.wxx.aidocumentagent.ingestion.infrastructure.persistence.DocumentBatchTaskRepository;
 import com.wxx.aidocumentagent.ingestion.infrastructure.persistence.DocumentIngestionJob;
 import com.wxx.aidocumentagent.ingestion.infrastructure.persistence.DocumentIngestionJobRepository;
+import com.wxx.aidocumentagent.ingestion.infrastructure.persistence.DocumentIngestionOutboxEvent;
 import com.wxx.aidocumentagent.ingestion.infrastructure.persistence.DocumentIngestionOutboxEventRepository;
 import com.wxx.aidocumentagent.ingestion.messaging.ChunkBatchMessage;
 import com.wxx.aidocumentagent.ingestion.messaging.DocumentIngestionMessage;
+import com.wxx.aidocumentagent.keyword.KeywordIndexErrorCode;
+import com.wxx.aidocumentagent.keyword.KeywordIndexException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -114,6 +118,31 @@ class IngestionFailureHandlerTest {
         verify(outboxEventRepository, never()).save(any());
     }
 
+    @Test
+    void 向量已成功但ES暂时不可用时只重试关键词阶段且不使任务READY() {
+        job.defineBatches(1);
+        DocumentBatchTask task = DocumentBatchTask.create(job, 0, 0, 49);
+        task.markQueued(LocalDateTime.now());
+        task.beginProcessing(LocalDateTime.now());
+        task.advanceToKeywordIndex();
+        task.markQueued(LocalDateTime.now());
+        task.beginProcessing(LocalDateTime.now());
+        when(batchTaskRepository.findLockedByBatchIdAndKnowledgeBaseId(task.getBatchId(), KNOWLEDGE_BASE_ID))
+                .thenReturn(Optional.of(task));
+
+        IngestionFailureDisposition disposition = failureHandler.handleBatchFailure(batchMessage(task),
+                new KeywordIndexException(KeywordIndexErrorCode.ELASTICSEARCH_UNAVAILABLE));
+
+        assertThat(disposition).isEqualTo(IngestionFailureDisposition.RETRY_SCHEDULED);
+        assertThat(task.getStage()).isEqualTo(ChunkBatchStage.KEYWORD_INDEX);
+        assertThat(task.getStatus()).isEqualTo(BatchTaskStatus.RETRYING);
+        assertThat(job.getStatus()).isEqualTo(IngestionJobStatus.RETRYING);
+        assertThat(document.getStatus()).isEqualTo(DocumentStatus.RETRYING);
+        ArgumentCaptor<DocumentIngestionOutboxEvent> eventCaptor = ArgumentCaptor.forClass(DocumentIngestionOutboxEvent.class);
+        verify(outboxEventRepository).save(eventCaptor.capture());
+        assertThat(eventCaptor.getValue().getBatchStage()).isEqualTo(ChunkBatchStage.KEYWORD_INDEX);
+    }
+
     private DocumentIngestionMessage message() {
         return new DocumentIngestionMessage(UUID.randomUUID(), UUID.fromString(job.getJobId()), DOCUMENT_ID,
                 KNOWLEDGE_BASE_ID, IngestionOperation.PARSE_AND_SPLIT, 0, Instant.now(), 1);
@@ -121,7 +150,7 @@ class IngestionFailureHandlerTest {
 
     private ChunkBatchMessage batchMessage(DocumentBatchTask task) {
         return new ChunkBatchMessage(UUID.randomUUID(), UUID.fromString(job.getJobId()), UUID.fromString(task.getBatchId()),
-                DOCUMENT_ID, KNOWLEDGE_BASE_ID, task.getChunkFrom(), task.getChunkTo(), ChunkBatchStage.INDEX,
+                DOCUMENT_ID, KNOWLEDGE_BASE_ID, task.getChunkFrom(), task.getChunkTo(), task.getStage(),
                 0, 1);
     }
 }

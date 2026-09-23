@@ -19,10 +19,13 @@ import com.wxx.aidocumentagent.document.storage.StoredObject;
 import com.wxx.aidocumentagent.ingestion.application.DocumentIngestionRequestService;
 import com.wxx.aidocumentagent.knowledgebase.domain.KnowledgeBaseErrorCode;
 import com.wxx.aidocumentagent.knowledgebase.infrastructure.persistence.KnowledgeBaseRepository;
+import com.wxx.aidocumentagent.keyword.KeywordIndex;
+import com.wxx.aidocumentagent.vector.VectorIndex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -42,18 +45,24 @@ public class DocumentApplicationService {
     private final DocumentStorage documentStorage;
     private final DocumentUploadValidator documentUploadValidator;
     private final DocumentIngestionRequestService documentIngestionRequestService;
+    private final ObjectProvider<VectorIndex> vectorIndexProvider;
+    private final ObjectProvider<KeywordIndex> keywordIndexProvider;
 
     @Autowired
     public DocumentApplicationService(KnowledgeBaseRepository knowledgeBaseRepository,
                                       DocumentRepository documentRepository,
                                       DocumentStorage documentStorage,
                                       DocumentUploadValidator documentUploadValidator,
-                                      DocumentIngestionRequestService documentIngestionRequestService) {
+                                      DocumentIngestionRequestService documentIngestionRequestService,
+                                      ObjectProvider<VectorIndex> vectorIndexProvider,
+                                      ObjectProvider<KeywordIndex> keywordIndexProvider) {
         this.knowledgeBaseRepository = knowledgeBaseRepository;
         this.documentRepository = documentRepository;
         this.documentStorage = documentStorage;
         this.documentUploadValidator = documentUploadValidator;
         this.documentIngestionRequestService = documentIngestionRequestService;
+        this.vectorIndexProvider = vectorIndexProvider;
+        this.keywordIndexProvider = keywordIndexProvider;
     }
 
     /** 保持已有单元测试和非 Spring 适配器的构造方式；生产环境始终注入摄取请求服务。 */
@@ -62,6 +71,27 @@ public class DocumentApplicationService {
                                       DocumentStorage documentStorage,
                                       DocumentUploadValidator documentUploadValidator) {
         this(knowledgeBaseRepository, documentRepository, documentStorage, documentUploadValidator, null);
+    }
+
+    /** 保留 M06 之前可显式传入摄取服务的构造方式；向量索引由 Spring 环境按需提供。 */
+    public DocumentApplicationService(KnowledgeBaseRepository knowledgeBaseRepository,
+                                      DocumentRepository documentRepository,
+                                      DocumentStorage documentStorage,
+                                      DocumentUploadValidator documentUploadValidator,
+                                      DocumentIngestionRequestService documentIngestionRequestService) {
+        this(knowledgeBaseRepository, documentRepository, documentStorage, documentUploadValidator,
+                documentIngestionRequestService, null, null);
+    }
+
+    /** 兼容 M07 调用方；M08 关键词端口在 Spring 环境中通过主构造器注入。 */
+    public DocumentApplicationService(KnowledgeBaseRepository knowledgeBaseRepository,
+                                      DocumentRepository documentRepository,
+                                      DocumentStorage documentStorage,
+                                      DocumentUploadValidator documentUploadValidator,
+                                      DocumentIngestionRequestService documentIngestionRequestService,
+                                      ObjectProvider<VectorIndex> vectorIndexProvider) {
+        this(knowledgeBaseRepository, documentRepository, documentStorage, documentUploadValidator,
+                documentIngestionRequestService, vectorIndexProvider, null);
     }
 
     /**
@@ -116,6 +146,7 @@ public class DocumentApplicationService {
     public void delete(long knowledgeBaseId, long documentId) {
         requireKnowledgeBase(knowledgeBaseId);
         Document document = findDocument(knowledgeBaseId, documentId);
+        deleteIndexesIfConfigured(knowledgeBaseId, document.getId());
         documentRepository.delete(document);
         documentRepository.flush();
         try {
@@ -130,6 +161,22 @@ public class DocumentApplicationService {
     private void requireKnowledgeBase(long knowledgeBaseId) {
         if (!knowledgeBaseRepository.existsById(knowledgeBaseId)) {
             throw new BusinessException(KnowledgeBaseErrorCode.KNOWLEDGE_BASE_NOT_FOUND);
+        }
+    }
+
+    /** 先删除受 knowledgeBaseId 约束的两类索引；任一外部索引不可用时不删除文档元数据。 */
+    private void deleteIndexesIfConfigured(long knowledgeBaseId, long documentId) {
+        if (vectorIndexProvider != null) {
+            VectorIndex vectorIndex = vectorIndexProvider.getIfAvailable();
+            if (vectorIndex != null) {
+                vectorIndex.deleteByDocument(knowledgeBaseId, documentId);
+            }
+        }
+        if (keywordIndexProvider != null) {
+            KeywordIndex keywordIndex = keywordIndexProvider.getIfAvailable();
+            if (keywordIndex != null) {
+                keywordIndex.deleteByDocument(knowledgeBaseId, documentId);
+            }
         }
     }
 

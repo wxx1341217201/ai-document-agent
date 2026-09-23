@@ -73,7 +73,13 @@ public class IngestionFailureHandler {
     public IngestionFailureDisposition handleBatchFailure(ChunkBatchMessage message, Throwable failure) {
         DocumentBatchTask task = batchTaskRepository.findLockedByBatchIdAndKnowledgeBaseId(message.batchId().toString(),
                 message.knowledgeBaseId()).orElseThrow(() -> new IngestionMessageValidationException("batch任务不存在"));
-        validateBatchMessage(task, message);
+        validateBatchIdentity(task, message);
+        if (task.getStage() != message.normalizedStage()) {
+            if (task.getStage().isAfter(message.normalizedStage())) {
+                return IngestionFailureDisposition.IGNORE;
+            }
+            throw new IngestionMessageValidationException(IngestionErrorCode.INGESTION_SCOPE_MISMATCH.defaultMessage());
+        }
         DocumentIngestionJob job = jobRepository.findLockedByJobIdAndKnowledgeBaseId(task.getJobId(), task.getKnowledgeBaseId())
                 .orElseThrow(() -> new IngestionMessageValidationException("batch所属任务不存在"));
         Document document = documentRepository.findByIdAndKnowledgeBaseId(task.getDocumentId(), task.getKnowledgeBaseId())
@@ -110,10 +116,10 @@ public class IngestionFailureHandler {
         }
     }
 
-    private void validateBatchMessage(DocumentBatchTask task, ChunkBatchMessage message) {
+    private void validateBatchIdentity(DocumentBatchTask task, ChunkBatchMessage message) {
         if (!task.getJobId().equals(message.jobId().toString()) || task.getDocumentId() != message.documentId()
                 || task.getKnowledgeBaseId() != message.knowledgeBaseId() || task.getChunkFrom() != message.chunkFrom()
-                || task.getChunkTo() != message.chunkTo() || task.getStage() != message.stage()) {
+                || task.getChunkTo() != message.chunkTo()) {
             throw new IngestionMessageValidationException(IngestionErrorCode.INGESTION_SCOPE_MISMATCH.defaultMessage());
         }
     }

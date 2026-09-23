@@ -27,6 +27,8 @@ import com.wxx.aidocumentagent.ingestion.infrastructure.persistence.DocumentInge
 import com.wxx.aidocumentagent.ingestion.infrastructure.persistence.DocumentIngestionOutboxEvent;
 import com.wxx.aidocumentagent.ingestion.infrastructure.persistence.DocumentIngestionOutboxEventRepository;
 import com.wxx.aidocumentagent.ingestion.messaging.DocumentIngestionMessage;
+import com.wxx.aidocumentagent.keyword.KeywordIndex;
+import com.wxx.aidocumentagent.vector.VectorIndex;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,6 +36,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.beans.factory.ObjectProvider;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -55,6 +58,10 @@ class DocumentIngestionCoordinatorTest {
     @Mock private DocumentRepository documentRepository;
     @Mock private DocumentStorage documentStorage;
     @Mock private DocumentChunkingApplicationService chunkingApplicationService;
+    @Mock private ObjectProvider<VectorIndex> vectorIndexProvider;
+    @Mock private VectorIndex vectorIndex;
+    @Mock private ObjectProvider<KeywordIndex> keywordIndexProvider;
+    @Mock private KeywordIndex keywordIndex;
 
     private DocumentIngestionCoordinator coordinator;
     private DocumentIngestionJob job;
@@ -78,7 +85,7 @@ class DocumentIngestionCoordinatorTest {
         };
         coordinator = new DocumentIngestionCoordinator(jobRepository, batchTaskRepository, outboxEventRepository,
                 documentRepository, documentStorage, new DocumentParserRegistry(List.of(parser)),
-                chunkingApplicationService, properties);
+                chunkingApplicationService, properties, vectorIndexProvider, keywordIndexProvider);
         job = DocumentIngestionJob.create(KNOWLEDGE_BASE_ID, DOCUMENT_ID);
         job.markQueued(LocalDateTime.now());
         document = Document.uploaded(KNOWLEDGE_BASE_ID, "long.txt", "550e8400-e29b-41d4-a716-446655440000.txt",
@@ -157,6 +164,48 @@ class DocumentIngestionCoordinatorTest {
         verify(chunkingApplicationService, never()).replace(anyLong(), anyLong(), any());
         verify(batchTaskRepository, never()).saveAll(any());
         verify(outboxEventRepository, never()).saveAll(any());
+    }
+
+    @Test
+    void 重新切分前按知识库和文档边界清除旧向量() {
+        when(jobRepository.findLockedByJobIdAndKnowledgeBaseId(job.getJobId(), KNOWLEDGE_BASE_ID))
+                .thenReturn(Optional.of(job), Optional.of(job));
+        when(documentRepository.findByIdAndKnowledgeBaseId(DOCUMENT_ID, KNOWLEDGE_BASE_ID))
+                .thenReturn(Optional.of(document), Optional.of(document));
+        when(batchTaskRepository.findByJobIdAndKnowledgeBaseIdOrderByBatchNoAsc(job.getJobId(), KNOWLEDGE_BASE_ID))
+                .thenReturn(List.of());
+        when(vectorIndexProvider.getIfAvailable()).thenReturn(vectorIndex);
+        List<TextChunk> chunks = List.of(new TextChunk(0, "chunk-0", 1, null, null, null, Map.of()));
+        when(chunkingApplicationService.replace(eq(KNOWLEDGE_BASE_ID), eq(DOCUMENT_ID), any(ParsedDocument.class)))
+                .thenReturn(new DocumentChunkingResult(KNOWLEDGE_BASE_ID, DOCUMENT_ID, "paragraph", 0, chunks));
+
+        coordinator.process(message());
+
+        org.mockito.InOrder inOrder = org.mockito.Mockito.inOrder(vectorIndex, chunkingApplicationService);
+        inOrder.verify(vectorIndex).deleteByDocument(KNOWLEDGE_BASE_ID, DOCUMENT_ID);
+        inOrder.verify(chunkingApplicationService).replace(eq(KNOWLEDGE_BASE_ID), eq(DOCUMENT_ID), any(ParsedDocument.class));
+    }
+
+    @Test
+    void 重新切分前按知识库和文档边界清除旧关键词索引() {
+        when(jobRepository.findLockedByJobIdAndKnowledgeBaseId(job.getJobId(), KNOWLEDGE_BASE_ID))
+                .thenReturn(Optional.of(job), Optional.of(job));
+        when(documentRepository.findByIdAndKnowledgeBaseId(DOCUMENT_ID, KNOWLEDGE_BASE_ID))
+                .thenReturn(Optional.of(document), Optional.of(document));
+        when(batchTaskRepository.findByJobIdAndKnowledgeBaseIdOrderByBatchNoAsc(job.getJobId(), KNOWLEDGE_BASE_ID))
+                .thenReturn(List.of());
+        when(vectorIndexProvider.getIfAvailable()).thenReturn(vectorIndex);
+        when(keywordIndexProvider.getIfAvailable()).thenReturn(keywordIndex);
+        List<TextChunk> chunks = List.of(new TextChunk(0, "chunk-0", 1, null, null, null, Map.of()));
+        when(chunkingApplicationService.replace(eq(KNOWLEDGE_BASE_ID), eq(DOCUMENT_ID), any(ParsedDocument.class)))
+                .thenReturn(new DocumentChunkingResult(KNOWLEDGE_BASE_ID, DOCUMENT_ID, "paragraph", 0, chunks));
+
+        coordinator.process(message());
+
+        org.mockito.InOrder inOrder = org.mockito.Mockito.inOrder(vectorIndex, keywordIndex, chunkingApplicationService);
+        inOrder.verify(vectorIndex).deleteByDocument(KNOWLEDGE_BASE_ID, DOCUMENT_ID);
+        inOrder.verify(keywordIndex).deleteByDocument(KNOWLEDGE_BASE_ID, DOCUMENT_ID);
+        inOrder.verify(chunkingApplicationService).replace(eq(KNOWLEDGE_BASE_ID), eq(DOCUMENT_ID), any(ParsedDocument.class));
     }
 
     private DocumentIngestionMessage message() {

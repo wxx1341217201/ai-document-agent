@@ -142,6 +142,87 @@ body,
   word-break: break-all;
 }
 
+.rag-query-panel {
+  max-width: 1040px;
+}
+
+.rag-query-settings {
+  margin-bottom: 16px;
+}
+
+.rag-query-settings .ant-form-item {
+  margin-bottom: 0;
+}
+
+.rag-query-actions {
+  align-items: center;
+}
+
+.rag-query-state,
+.rag-query-result {
+  margin-top: 16px;
+}
+
+.rag-answer-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 120px;
+  gap: 10px;
+}
+
+.rag-degraded-warning {
+  margin-bottom: 16px;
+}
+
+.rag-answer-markdown {
+  overflow-wrap: anywhere;
+}
+
+.rag-answer-markdown > :first-child {
+  margin-top: 0;
+}
+
+.rag-answer-markdown > :last-child {
+  margin-bottom: 0;
+}
+
+.rag-answer-markdown pre {
+  overflow: auto;
+  padding: 12px;
+  background: #f6f8fa;
+  border-radius: 6px;
+}
+
+.rag-inline-citation {
+  height: auto;
+  padding: 0 3px;
+  vertical-align: baseline;
+}
+
+.rag-citations {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.rag-citations .ant-typography {
+  margin-top: 0;
+}
+
+.citation-drawer-quote {
+  padding: 12px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: #f6f8fa;
+  border-left: 3px solid #1677ff;
+  border-radius: 4px;
+}
+
+.citation-drawer-context-notice {
+  margin: 16px 0;
+}
+
 @media (max-width: 767px) {
   .app-content {
     padding: 16px;

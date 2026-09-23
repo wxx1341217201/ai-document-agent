@@ -5,6 +5,8 @@ import com.wxx.aidocumentagent.common.api.ErrorCode;
 import com.wxx.aidocumentagent.document.domain.DocumentErrorCode;
 import com.wxx.aidocumentagent.document.storage.DocumentStorageException;
 import com.wxx.aidocumentagent.ingestion.domain.IngestionErrorCode;
+import com.wxx.aidocumentagent.keyword.KeywordIndexException;
+import com.wxx.aidocumentagent.vector.VectorIndexException;
 import org.springframework.dao.QueryTimeoutException;
 import org.springframework.dao.TransientDataAccessException;
 import org.springframework.stereotype.Component;
@@ -16,6 +18,14 @@ public class IngestionFailureClassifier {
     public IngestionFailureSummary classify(Throwable failure) {
         Throwable current = failure;
         for (int depth = 0; current != null && depth < 16; depth++, current = current.getCause()) {
+            if (current instanceof VectorIndexException vectorIndexException) {
+                return new IngestionFailureSummary(vectorIndexException.getErrorCode().code(),
+                        vectorIndexException.getErrorCode().defaultMessage(), vectorIndexException.isRetryable());
+            }
+            if (current instanceof KeywordIndexException keywordIndexException) {
+                return new IngestionFailureSummary(keywordIndexException.getErrorCode().code(),
+                        keywordIndexException.getErrorCode().defaultMessage(), keywordIndexException.isRetryable());
+            }
             if (current instanceof BusinessException businessException) {
                 ErrorCode code = businessException.getErrorCode();
                 boolean retryable = code == DocumentErrorCode.PARSE_SOURCE_FAILURE

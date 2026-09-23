@@ -24,6 +24,10 @@ import com.wxx.aidocumentagent.ingestion.infrastructure.persistence.DocumentInge
 import com.wxx.aidocumentagent.ingestion.infrastructure.persistence.DocumentIngestionOutboxEventRepository;
 import com.wxx.aidocumentagent.ingestion.messaging.DocumentIngestionMessage;
 import com.wxx.aidocumentagent.ingestion.messaging.IngestionMessageValidationException;
+import com.wxx.aidocumentagent.keyword.KeywordIndex;
+import com.wxx.aidocumentagent.vector.VectorIndex;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,7 +43,10 @@ public class DocumentIngestionCoordinator {
     private final DocumentParserRegistry parserRegistry;
     private final DocumentChunkingApplicationService chunkingApplicationService;
     private final IngestionProperties properties;
+    private final ObjectProvider<VectorIndex> vectorIndexProvider;
+    private final ObjectProvider<KeywordIndex> keywordIndexProvider;
 
+    @Autowired
     public DocumentIngestionCoordinator(DocumentIngestionJobRepository jobRepository,
                                         DocumentBatchTaskRepository batchTaskRepository,
                                         DocumentIngestionOutboxEventRepository outboxEventRepository,
@@ -47,7 +54,9 @@ public class DocumentIngestionCoordinator {
                                         DocumentStorage documentStorage,
                                         DocumentParserRegistry parserRegistry,
                                         DocumentChunkingApplicationService chunkingApplicationService,
-                                        IngestionProperties properties) {
+                                        IngestionProperties properties,
+                                        ObjectProvider<VectorIndex> vectorIndexProvider,
+                                        ObjectProvider<KeywordIndex> keywordIndexProvider) {
         this.jobRepository = jobRepository;
         this.batchTaskRepository = batchTaskRepository;
         this.outboxEventRepository = outboxEventRepository;
@@ -56,6 +65,35 @@ public class DocumentIngestionCoordinator {
         this.parserRegistry = parserRegistry;
         this.chunkingApplicationService = chunkingApplicationService;
         this.properties = properties;
+        this.vectorIndexProvider = vectorIndexProvider;
+        this.keywordIndexProvider = keywordIndexProvider;
+    }
+
+    /** 保留 M06 的直接构造方式，供无向量基础设施的单元测试与适配器使用。 */
+    public DocumentIngestionCoordinator(DocumentIngestionJobRepository jobRepository,
+                                        DocumentBatchTaskRepository batchTaskRepository,
+                                        DocumentIngestionOutboxEventRepository outboxEventRepository,
+                                        DocumentRepository documentRepository,
+                                        DocumentStorage documentStorage,
+                                        DocumentParserRegistry parserRegistry,
+                                        DocumentChunkingApplicationService chunkingApplicationService,
+                                        IngestionProperties properties) {
+        this(jobRepository, batchTaskRepository, outboxEventRepository, documentRepository, documentStorage,
+                parserRegistry, chunkingApplicationService, properties, null, null);
+    }
+
+    /** 保留 M07 的直接构造方式，供只装配向量端口的单元测试使用。 */
+    public DocumentIngestionCoordinator(DocumentIngestionJobRepository jobRepository,
+                                        DocumentBatchTaskRepository batchTaskRepository,
+                                        DocumentIngestionOutboxEventRepository outboxEventRepository,
+                                        DocumentRepository documentRepository,
+                                        DocumentStorage documentStorage,
+                                        DocumentParserRegistry parserRegistry,
+                                        DocumentChunkingApplicationService chunkingApplicationService,
+                                        IngestionProperties properties,
+                                        ObjectProvider<VectorIndex> vectorIndexProvider) {
+        this(jobRepository, batchTaskRepository, outboxEventRepository, documentRepository, documentStorage,
+                parserRegistry, chunkingApplicationService, properties, vectorIndexProvider, null);
     }
 
     @Transactional
@@ -83,6 +121,7 @@ public class DocumentIngestionCoordinator {
         }
 
         ParsedDocument parsedDocument = parse(document);
+        deleteIndexesIfConfigured(document.getKnowledgeBaseId(), document.getId());
         DocumentChunkingResult chunkingResult = chunkingApplicationService.replace(document.getKnowledgeBaseId(),
                 document.getId(), parsedDocument);
 
@@ -101,6 +140,22 @@ public class DocumentIngestionCoordinator {
                 .orElseThrow(() -> new IngestionMessageValidationException("文档扩展名不受支持"));
         return parserRegistry.parse(new DocumentSource(documentType, document.getOriginalName(),
                 () -> documentStorage.load(document.getStorageKey())));
+    }
+
+    /** 在重新切分并发布新 batch 前清掉两类旧索引，避免已删除 chunk 遗留在任一检索通道。 */
+    private void deleteIndexesIfConfigured(long knowledgeBaseId, long documentId) {
+        if (vectorIndexProvider != null) {
+            VectorIndex vectorIndex = vectorIndexProvider.getIfAvailable();
+            if (vectorIndex != null) {
+                vectorIndex.deleteByDocument(knowledgeBaseId, documentId);
+            }
+        }
+        if (keywordIndexProvider != null) {
+            KeywordIndex keywordIndex = keywordIndexProvider.getIfAvailable();
+            if (keywordIndex != null) {
+                keywordIndex.deleteByDocument(knowledgeBaseId, documentId);
+            }
+        }
     }
 
     private void createBatchTasks(DocumentIngestionJob job, Document document, int chunkCount) {

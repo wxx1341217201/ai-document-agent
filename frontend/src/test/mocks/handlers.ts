@@ -181,6 +181,62 @@ export const handlers = [
       return success(null);
     },
   ),
+
+  // FE05 test/demo mock: production data is supplied by the backend query endpoint.
+  http.post(`${API_PATH}/knowledge-bases/:knowledgeBaseId/query`, async ({ params, request }) => {
+    const knowledgeBaseId = numberParam(params.knowledgeBaseId);
+    if (!getKnowledgeBase(knowledgeBaseId)) {
+      return failure(404, 'KNOWLEDGE_BASE_NOT_FOUND', '知识库不存在');
+    }
+
+    const input = (await request.json()) as {
+      question?: unknown;
+      topK?: unknown;
+      rerank?: unknown;
+      stream?: unknown;
+    };
+    const question = typeof input.question === 'string' ? input.question.trim() : '';
+    if (!question) {
+      return failure(400, 'VALIDATION_ERROR', '参数校验失败', [
+        { field: 'question', message: '问题不能为空' },
+      ]);
+    }
+    if (
+      input.topK !== undefined &&
+      (typeof input.topK !== 'number' ||
+        !Number.isInteger(input.topK) ||
+        input.topK < 1 ||
+        input.topK > 20)
+    ) {
+      return failure(400, 'VALIDATION_ERROR', '参数校验失败', [
+        { field: 'topK', message: 'topK必须在1到20之间' },
+      ]);
+    }
+    if (input.stream === true) {
+      return failure(400, 'VALIDATION_ERROR', '参数校验失败', [
+        { field: 'stream', message: '当前接口暂不支持流式输出' },
+      ]);
+    }
+
+    return success({
+      answer: '系统会使用幂等键识别重复消息，并在确认后安全跳过重复处理。[C1]',
+      citations: [
+        {
+          citationId: 'C1',
+          documentId: 101,
+          documentName: 'catalyst-paper.pdf',
+          chunkId: 1001,
+          pageFrom: 5,
+          pageTo: 5,
+          quote: '消费者会先检查幂等键；已处理的消息不会再次执行业务逻辑。',
+        },
+      ],
+      retrieval: {
+        degraded: true,
+        candidateCount: 1,
+      },
+    });
+  }),
 ];
 
 function success<T>(data: T, status = 200) {

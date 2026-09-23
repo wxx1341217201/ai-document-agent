@@ -11,10 +11,18 @@ public record ChunkBatchIndexingRequest(
         long documentId,
         int chunkFrom,
         int chunkTo,
+        String documentTitle,
         List<IndexableChunk> chunks) {
 
     public ChunkBatchIndexingRequest {
+        documentTitle = documentTitle == null || documentTitle.isBlank() ? null : documentTitle;
         chunks = List.copyOf(chunks);
+    }
+
+    /** 兼容 M07 测试和适配器；M08 正常路径始终传入文档原始名作为 title。 */
+    public ChunkBatchIndexingRequest(String batchId, String jobId, long knowledgeBaseId, long documentId,
+                                     int chunkFrom, int chunkTo, List<IndexableChunk> chunks) {
+        this(batchId, jobId, knowledgeBaseId, documentId, chunkFrom, chunkTo, null, chunks);
     }
 
     public record IndexableChunk(
