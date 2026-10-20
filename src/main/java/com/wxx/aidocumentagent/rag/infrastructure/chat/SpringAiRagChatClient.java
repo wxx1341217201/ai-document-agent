@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import com.wxx.aidocumentagent.rag.RagProperties;
+import com.wxx.aidocumentagent.agent.ModelFailureDiagnostics;
 import com.wxx.aidocumentagent.rag.application.RagChatClient;
 import com.wxx.aidocumentagent.rag.application.RagChatCompletion;
 import com.wxx.aidocumentagent.rag.application.RagChatException;
@@ -15,9 +16,12 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.metadata.ChatResponseMetadata;
 import org.springframework.ai.chat.metadata.Usage;
 import org.springframework.ai.chat.model.ChatResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Spring AI ChatClient 适配器；使用虚拟线程隔离阻塞调用并在应用层执行总请求超时。 */
 public final class SpringAiRagChatClient implements RagChatClient {
+    private static final Logger log = LoggerFactory.getLogger(SpringAiRagChatClient.class);
 
     private final ChatClient chatClient;
     private final ExecutorService executor;
@@ -50,6 +54,9 @@ public final class SpringAiRagChatClient implements RagChatClient {
             throw new RagChatException(RagChatException.Reason.CALL_FAILED, exception);
         }
         catch (ExecutionException exception) {
+            var failure = ModelFailureDiagnostics.classify(exception.getCause());
+            log.warn("rag_model_failure category={} httpStatus={} retryable={}",
+                    failure.category(), failure.httpStatus(), failure.retryable());
             throw new RagChatException(RagChatException.Reason.CALL_FAILED, exception.getCause());
         }
         catch (RagChatException exception) {
@@ -62,9 +69,10 @@ public final class SpringAiRagChatClient implements RagChatClient {
 
     private RagChatCompletion toCompletion(ChatResponse response) {
         if (response == null || response.getResult() == null || response.getResult().getOutput() == null) {
+            log.warn("rag_model_failure category=EMPTY_RESPONSE");
             throw new RagChatException(RagChatException.Reason.INVALID_RESPONSE, null);
         }
-        String answer = response.getResult().getOutput().getText();
+        String answer = visibleAnswer(response.getResult().getOutput().getText());
         if (answer == null || answer.isBlank()) {
             throw new RagChatException(RagChatException.Reason.INVALID_RESPONSE, null);
         }
@@ -82,5 +90,38 @@ public final class SpringAiRagChatClient implements RagChatClient {
 
     private boolean hasText(String value) {
         return value != null && !value.isBlank();
+    }
+
+    /**
+     * 某些兼容接口会把供应商的推理片段拼进文本。仅剥离位于输出开头的标准 think 块；
+     * 未闭合或只有推理的输出视为无效，确保其既不会返回，也不会进入会话审计表。
+     */
+    private String visibleAnswer(String answer) {
+        if (answer == null) {
+            return null;
+        }
+        String normalized = answer.strip();
+        if (!normalized.regionMatches(true, 0, "<think>", 0, "<think>".length())) {
+            return normalized;
+        }
+        int closingIndex = indexOfIgnoreCase(normalized, "</think>", "<think>".length());
+        if (closingIndex < 0) {
+            throw new RagChatException(RagChatException.Reason.INVALID_RESPONSE, null);
+        }
+        String visible = normalized.substring(closingIndex + "</think>".length()).strip();
+        if (visible.isBlank()) {
+            throw new RagChatException(RagChatException.Reason.INVALID_RESPONSE, null);
+        }
+        return visible;
+    }
+
+    private int indexOfIgnoreCase(String source, String target, int fromIndex) {
+        int lastPossibleIndex = source.length() - target.length();
+        for (int index = fromIndex; index <= lastPossibleIndex; index++) {
+            if (source.regionMatches(true, index, target, 0, target.length())) {
+                return index;
+            }
+        }
+        return -1;
     }
 }

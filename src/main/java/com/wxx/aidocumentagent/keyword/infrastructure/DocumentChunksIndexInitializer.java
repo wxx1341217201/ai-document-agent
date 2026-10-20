@@ -38,15 +38,27 @@ public final class DocumentChunksIndexInitializer {
 
     /** 创建 document_chunks_v1；已有索引只允许复用指向该版本的单一别名。 */
     public void initialize() {
+        initialize(true);
+    }
+
+    /** 评测启动仅检查既有索引与别名；缺失时失败，不产生写操作。 */
+    public void validateExisting() {
+        initialize(false);
+    }
+
+    private void initialize(boolean mayCreate) {
         try {
             if (!client.indices().exists(request -> request.index(properties.getIndexName())).value()) {
+                if (!mayCreate) {
+                    throw new KeywordIndexException(KeywordIndexErrorCode.ELASTICSEARCH_INDEX_CONFIGURATION_MISMATCH);
+                }
                 client.indices().create(request -> request
                         .index(properties.getIndexName())
                         .settings(settings())
                         .mappings(mapping())
                         .aliases(properties.getAlias(), alias -> alias.isWriteIndex(true)));
             }
-            ensureAlias();
+            ensureAlias(mayCreate);
         }
         catch (IOException | RuntimeException exception) {
             if (exception instanceof KeywordIndexException keywordIndexException) {
@@ -56,8 +68,11 @@ public final class DocumentChunksIndexInitializer {
         }
     }
 
-    private void ensureAlias() throws IOException {
+    private void ensureAlias(boolean mayCreate) throws IOException {
         if (!client.indices().existsAlias(request -> request.name(properties.getAlias())).value()) {
+            if (!mayCreate) {
+                throw new KeywordIndexException(KeywordIndexErrorCode.ELASTICSEARCH_INDEX_CONFIGURATION_MISMATCH);
+            }
             client.indices().putAlias(request -> request.index(properties.getIndexName()).name(properties.getAlias())
                     .isWriteIndex(true));
             return;

@@ -69,13 +69,15 @@ public final class HybridRetriever {
 
         ChannelTask<List<VectorHit>> vectorTask = submit(() -> {
             List<VectorHit> hits = vectorIndex.search(new VectorQuery(query.knowledgeBaseId(), query.query(),
-                    query.vectorTopK(), properties.getVectorSimilarityThreshold()));
-            return List.copyOf(hits);
+                    query.vectorTopK(), properties.getVectorSimilarityThreshold(), query.documentIds()));
+            return hits.stream().filter(hit -> hit != null && (query.documentIds().isEmpty()
+                    || query.documentIds().contains(hit.documentId()))).toList();
         });
         ChannelTask<List<KeywordHit>> keywordTask = submit(() -> {
             List<KeywordHit> hits = keywordIndex.search(new KeywordQuery(query.knowledgeBaseId(), query.query(),
-                    query.keywordTopK()));
-            return List.copyOf(hits);
+                    query.keywordTopK(), query.documentIds()));
+            return hits.stream().filter(hit -> hit != null && (query.documentIds().isEmpty()
+                    || query.documentIds().contains(hit.documentId()))).toList();
         });
 
         ChannelOutcome<List<VectorHit>> vector = await(vectorTask, properties.getVectorTimeout(), deadlineNanos);

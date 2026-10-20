@@ -15,6 +15,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 
 /** M08 使用 Spring Boot 提供的 Elasticsearch Java Client，不自行管理 HTTP 客户端。 */
 @Configuration(proxyBeanMethods = false)
@@ -34,8 +36,17 @@ public class KeywordConfiguration {
     }
 
     @Bean
-    ApplicationRunner documentChunksIndexInitializationRunner(DocumentChunksIndexInitializer initializer) {
-        return arguments -> initializer.initialize();
+    @Order(Ordered.HIGHEST_PRECEDENCE)
+    ApplicationRunner documentChunksIndexInitializationRunner(DocumentChunksIndexInitializer initializer,
+                                                               KeywordProperties properties) {
+        return arguments -> {
+            if (properties.isInitializeSchema()) {
+                initializer.initialize();
+            }
+            else {
+                initializer.validateExisting();
+            }
+        };
     }
 
     @Bean

@@ -19,6 +19,11 @@ public class RagProperties {
 
     private boolean enabled = true;
 
+    private boolean disableThinking = true;
+
+    public boolean isDisableThinking() { return disableThinking; }
+    public void setDisableThinking(boolean value) { disableThinking = value; }
+
     @Min(1)
     @Max(MAX_TOP_K)
     private int defaultTopK = 8;
@@ -30,10 +35,10 @@ public class RagProperties {
     private int reservedOutputTokens = 2_048;
 
     @Min(512)
-    private int maxContextCharacters = 12_000;
+    private int maxContextCharacters = 32_000;
 
     @Min(64)
-    private int maxChunkCharacters = 3_000;
+    private int maxChunkCharacters = 4_500;
 
     @Min(1)
     private int minChunkCharacters = 200;
@@ -43,6 +48,21 @@ public class RagProperties {
 
     @Min(0)
     private int redundantOverlapCharacters = 80;
+
+    private boolean queryExpansionEnabled = true;
+
+    @Min(1) @Max(20)
+    private int retrievalCandidateTopK = 1;
+
+    public int getRetrievalCandidateTopK() { return retrievalCandidateTopK; }
+    public void setRetrievalCandidateTopK(int value) { retrievalCandidateTopK = value; }
+
+    @Min(1)
+    @Max(3)
+    private int maxRetrievalQueries = 3;
+
+    @NotNull
+    private Duration queryExpansionTimeout = Duration.ofSeconds(30);
 
     @NotNull
     private Duration connectTimeout = Duration.ofSeconds(3);
@@ -164,6 +184,13 @@ public class RagProperties {
         return requestedTopK == null ? defaultTopK : requestedTopK;
     }
 
+    public boolean isQueryExpansionEnabled() { return queryExpansionEnabled; }
+    public void setQueryExpansionEnabled(boolean enabled) { this.queryExpansionEnabled = enabled; }
+    public int getMaxRetrievalQueries() { return maxRetrievalQueries; }
+    public void setMaxRetrievalQueries(int count) { this.maxRetrievalQueries = count; }
+    public Duration getQueryExpansionTimeout() { return queryExpansionTimeout; }
+    public void setQueryExpansionTimeout(Duration timeout) { this.queryExpansionTimeout = timeout; }
+
     /** 模型输入可用 token；固定系统提示词、问题和证据块由 Spring AI TokenCountEstimator 实测扣除。 */
     public int inputTokenBudget() {
         return contextWindowTokens - reservedOutputTokens;
@@ -179,9 +206,10 @@ public class RagProperties {
         return maxChunkCharacters >= minChunkCharacters;
     }
 
-    @AssertTrue(message = "app.rag.connect-timeout、read-timeout和chat-timeout必须大于0")
+    @AssertTrue(message = "app.rag连接、读取、生成及检索扩展超时必须大于0")
     public boolean areTimeoutsPositive() {
-        return isPositive(connectTimeout) && isPositive(readTimeout) && isPositive(chatTimeout);
+        return isPositive(connectTimeout) && isPositive(readTimeout) && isPositive(chatTimeout)
+                && isPositive(queryExpansionTimeout);
     }
 
     private static boolean isPositive(Duration value) {

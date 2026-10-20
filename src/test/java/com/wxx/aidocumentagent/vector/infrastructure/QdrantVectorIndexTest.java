@@ -95,6 +95,17 @@ class QdrantVectorIndexTest {
         return properties;
     }
 
+    @Test
+    void selectedDocumentsAreFilteredBeforeSearchAndCheckedAgainAfterwards() {
+        var store = new RecordingVectorStore(new DeterministicFakeEmbeddingModel(4));
+        var index = new QdrantVectorIndex(store, properties(), new VectorIndexExceptionTranslator());
+        var excluded = new ChunkVector(9999, 999, 9, 0, null, null, "f".repeat(64), "fake-embedding-v1", "excluded");
+        store.searchResults = List.of(toDocument(vectors().getFirst(), 0.8), toDocument(excluded, 0.99));
+        var found = index.search(new VectorQuery(9, "query", 5, 0.2, java.util.Set.of(101L, 102L)));
+        assertThat(store.lastSearchRequest.getFilterExpression().toString()).contains("AND", "OR", "documentId", "101", "102");
+        assertThat(found).extracting(VectorHit::documentId).containsExactly(101L);
+    }
+
     private List<ChunkVector> vectors() {
         return List.of(
                 new ChunkVector(1001L, 101L, 9L, 0, 5, 6, "a".repeat(64), "fake-embedding-v1", "first chunk"),

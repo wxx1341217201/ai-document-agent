@@ -16,12 +16,23 @@ import org.springframework.validation.annotation.Validated;
 @ConfigurationProperties(prefix = "app.rerank")
 public class RerankingProperties {
 
+    public enum Provider {
+        GENERIC,
+        COHERE,
+        DASHSCOPE
+    }
+
     public static final int MAX_CANDIDATES_LIMIT = 100;
     public static final int MAX_TEXT_LENGTH_LIMIT = 16_000;
 
     private boolean enabled;
 
+    @NotNull
+    private Provider provider = Provider.GENERIC;
+
     private URI url;
+
+    private String model = "";
 
     private String apiKey = "";
 
@@ -62,12 +73,28 @@ public class RerankingProperties {
         this.enabled = enabled;
     }
 
+    public Provider getProvider() {
+        return provider;
+    }
+
+    public void setProvider(Provider provider) {
+        this.provider = provider;
+    }
+
     public URI getUrl() {
         return url;
     }
 
     public void setUrl(URI url) {
         this.url = url;
+    }
+
+    public String getModel() {
+        return model;
+    }
+
+    public void setModel(String model) {
+        this.model = model;
     }
 
     public String getApiKey() {
@@ -157,6 +184,18 @@ public class RerankingProperties {
         }
         return url != null && url.isAbsolute()
                 && ("http".equalsIgnoreCase(url.getScheme()) || "https".equalsIgnoreCase(url.getScheme()));
+    }
+
+    @AssertTrue(message = "app.rerank.provider=cohere时必须配置model和api-key")
+    public boolean isCohereConfigValidWhenEnabled() {
+        return !enabled || provider != Provider.COHERE
+                || (StringUtils.hasText(model) && StringUtils.hasText(apiKey));
+    }
+
+    @AssertTrue(message = "app.rerank.provider=dashscope时必须配置model和api-key")
+    public boolean isDashScopeConfigValidWhenEnabled() {
+        return !enabled || provider != Provider.DASHSCOPE
+                || (StringUtils.hasText(model) && StringUtils.hasText(apiKey));
     }
 
     @AssertTrue(message = "app.rerank.api-key-header不能为空")

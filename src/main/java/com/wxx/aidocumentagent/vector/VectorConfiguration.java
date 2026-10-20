@@ -3,10 +3,15 @@ package com.wxx.aidocumentagent.vector;
 import com.wxx.aidocumentagent.vector.infrastructure.ClassifyingEmbeddingModel;
 import com.wxx.aidocumentagent.vector.infrastructure.QdrantCollectionInitializer;
 import com.wxx.aidocumentagent.vector.infrastructure.QdrantVectorIndex;
+import io.micrometer.observation.ObservationRegistry;
 import io.qdrant.client.QdrantClient;
 import io.qdrant.client.QdrantGrpcClient;
+import org.springframework.ai.embedding.BatchingStrategy;
+import org.springframework.ai.embedding.TokenCountBatchingStrategy;
 import org.springframework.ai.openai.OpenAiEmbeddingModel;
+import org.springframework.ai.vectorstore.observation.VectorStoreObservationConvention;
 import org.springframework.ai.vectorstore.qdrant.QdrantVectorStore;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -40,12 +45,18 @@ public class VectorConfiguration {
     @Bean
     QdrantVectorStore qdrantVectorStore(QdrantClient qdrantClient, OpenAiEmbeddingModel openAiEmbeddingModel,
                                         VectorProperties properties, QdrantCollectionInitializer initializer,
-                                        VectorIndexExceptionTranslator exceptionTranslator) {
+                                        VectorIndexExceptionTranslator exceptionTranslator,
+                                        ObjectProvider<ObservationRegistry> observationRegistry,
+                                        ObjectProvider<VectorStoreObservationConvention> observationConvention,
+                                        ObjectProvider<BatchingStrategy> batchingStrategy) {
         initializer.initialize();
         return QdrantVectorStore.builder(qdrantClient,
                         new ClassifyingEmbeddingModel(openAiEmbeddingModel, properties, exceptionTranslator))
                 .collectionName(properties.getQdrant().getCollectionName())
                 .initializeSchema(false)
+                .observationRegistry(observationRegistry.getIfUnique(() -> ObservationRegistry.NOOP))
+                .customObservationConvention(observationConvention.getIfAvailable())
+                .batchingStrategy(batchingStrategy.getIfAvailable(TokenCountBatchingStrategy::new))
                 .build();
     }
 

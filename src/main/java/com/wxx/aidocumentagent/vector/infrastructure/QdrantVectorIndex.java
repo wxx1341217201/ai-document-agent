@@ -50,19 +50,28 @@ public final class QdrantVectorIndex implements VectorIndex {
     @Override
     public List<VectorHit> search(VectorQuery query) {
         FilterExpressionBuilder filter = new FilterExpressionBuilder();
+        var scope = filter.eq(ChunkVector.KNOWLEDGE_BASE_ID, Long.toString(query.knowledgeBaseId()));
+        if (!query.documentIds().isEmpty()) {
+            var ids = query.documentIds().stream().sorted().toList();
+            var documents = filter.eq(ChunkVector.DOCUMENT_ID, Long.toString(ids.getFirst()));
+            for (int i = 1; i < ids.size(); i++) {
+                documents = filter.or(documents, filter.eq(ChunkVector.DOCUMENT_ID, Long.toString(ids.get(i))));
+            }
+            scope = filter.and(scope, documents);
+        }
         SearchRequest request = SearchRequest.builder()
                 .query(query.text())
                 .topK(query.topK())
                 .similarityThreshold(query.similarityThreshold())
-                .filterExpression(filter.eq(ChunkVector.KNOWLEDGE_BASE_ID,
-                        Long.toString(query.knowledgeBaseId())).build())
+                .filterExpression(scope.build())
                 .build();
         try {
             List<VectorHit> hits = new ArrayList<>();
             for (Document document : vectorStore.similaritySearch(request)) {
                 VectorHit hit = toVectorHit(document);
                 // Qdrant 过滤器是第一道边界；结果映射时再检查一次，防止错误或旧数据跨库泄漏。
-                if (hit.knowledgeBaseId() == query.knowledgeBaseId()) {
+                if (hit.knowledgeBaseId() == query.knowledgeBaseId()
+                        && (query.documentIds().isEmpty() || query.documentIds().contains(hit.documentId()))) {
                     hits.add(hit);
                 }
             }

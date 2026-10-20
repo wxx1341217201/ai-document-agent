@@ -14,6 +14,9 @@ public class KeywordProperties {
 
     private boolean enabled = true;
 
+    /** 独立只读 benchmark 禁止在启动时创建索引或补写别名。 */
+    private boolean initializeSchema = true;
+
     @NotBlank
     @Pattern(regexp = "[a-z0-9][a-z0-9._-]*", message = "app.keyword.index-name必须是小写Elasticsearch索引名")
     private String indexName = "document_chunks_v1";
@@ -31,6 +34,14 @@ public class KeywordProperties {
 
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
+    }
+
+    public boolean isInitializeSchema() {
+        return initializeSchema;
+    }
+
+    public void setInitializeSchema(boolean initializeSchema) {
+        this.initializeSchema = initializeSchema;
     }
 
     public String getIndexName() {

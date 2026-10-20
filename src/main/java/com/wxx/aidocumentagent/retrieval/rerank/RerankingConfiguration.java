@@ -4,9 +4,12 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.http.client.ClientHttpRequestFactoryBuilder;
+import org.springframework.boot.http.client.HttpClientSettings;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.web.client.RestClient;
 
 /** 装配本地 NoOp、可选 HTTP 实现和进程内熔断器；默认选择不访问网络的实现。 */
 @Configuration(proxyBeanMethods = false)
@@ -20,8 +23,12 @@ public class RerankingConfiguration {
 
     @Bean(name = "httpCrossEncoderReranker")
     @ConditionalOnProperty(prefix = "app.rerank", name = "enabled", havingValue = "true")
-    HttpCrossEncoderReranker httpCrossEncoderReranker(RerankingProperties properties) {
-        return new HttpCrossEncoderReranker(properties);
+    HttpCrossEncoderReranker httpCrossEncoderReranker(RerankingProperties properties,
+            RestClient.Builder restClientBuilder, ClientHttpRequestFactoryBuilder<?> requestFactoryBuilder,
+            HttpClientSettings httpClientSettings) {
+        var settings = httpClientSettings.withTimeouts(properties.getConnectTimeout(), properties.getReadTimeout());
+        var restClient = restClientBuilder.requestFactory(requestFactoryBuilder.build(settings)).build();
+        return new HttpCrossEncoderReranker(properties, restClient);
     }
 
     @Bean(name = "reranker")

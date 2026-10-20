@@ -9,11 +9,18 @@ public record RetrievalQuery(
         String query,
         int vectorTopK,
         int keywordTopK,
-        int finalTopK) {
+        int finalTopK,
+        java.util.Set<Long> documentIds) {
+
+    public RetrievalQuery(long knowledgeBaseId, String query, int vectorTopK, int keywordTopK, int finalTopK) {
+        this(knowledgeBaseId, query, vectorTopK, keywordTopK, finalTopK, java.util.Set.of());
+    }
 
     public static final int MAX_TOP_K = 100;
 
     public RetrievalQuery {
+        documentIds = java.util.Set.copyOf(documentIds);
+        if (documentIds.stream().anyMatch(id -> id <= 0)) throw new IllegalArgumentException("文档范围无效");
         if (knowledgeBaseId <= 0) {
             throw new IllegalArgumentException("knowledgeBaseId必须大于0");
         }

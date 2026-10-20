@@ -96,7 +96,8 @@ public final class ElasticsearchKeywordIndex implements KeywordIndex {
             for (var hit : response.hits().hits()) {
                 KeywordDocument source = hit.source();
                 // ES filter 是第一道边界；映射结果时再验证一次，防御旧索引或错误响应串库。
-                if (source != null && source.knowledgeBaseId() == query.knowledgeBaseId()) {
+                if (source != null && source.knowledgeBaseId() == query.knowledgeBaseId()
+                        && (query.documentIds().isEmpty() || query.documentIds().contains(source.documentId()))) {
                     hits.add(new KeywordHit(source.chunkId(), source.knowledgeBaseId(), source.documentId(),
                             source.content(), source.title(), source.sectionTitle(), source.pageFrom(), source.pageTo(),
                             source.contentHash(), hit.score() == null ? 0D : hit.score()));
@@ -139,7 +140,13 @@ public final class ElasticsearchKeywordIndex implements KeywordIndex {
     }
 
     private Query keywordQuery(KeywordQuery query) {
-        return Query.of(root -> root.bool(bool -> bool
+        return Query.of(root -> root.bool(bool -> {
+            if (!query.documentIds().isEmpty()) {
+                bool.filter(filter -> filter.terms(terms -> terms.field(KeywordDocument.DOCUMENT_ID)
+                        .terms(values -> values.value(query.documentIds().stream().sorted()
+                                .map(id -> co.elastic.clients.elasticsearch._types.FieldValue.of(id)).toList()))));
+            }
+            return bool
                 .filter(filter -> filter.term(term -> term.field(KeywordDocument.KNOWLEDGE_BASE_ID)
                         .value(query.knowledgeBaseId())))
                 .should(should -> should.multiMatch(multiMatch -> multiMatch
@@ -154,7 +161,8 @@ public final class ElasticsearchKeywordIndex implements KeywordIndex {
                 .should(should -> should.matchPhrase(phrase -> phrase
                         .field(KeywordDocument.CONTENT)
                         .query(query.text())))
-                .minimumShouldMatch("1")));
+                .minimumShouldMatch("1");
+        }));
     }
 
     private Query scopedDocumentQuery(long knowledgeBaseId, long documentId) {

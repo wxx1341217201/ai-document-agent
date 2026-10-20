@@ -50,6 +50,19 @@ class ElasticsearchKeywordIndexTest {
     }
 
     @Test
+    void selectedDocumentTermsAreAppliedBeforeRankingAndDefendedOnMapping() throws Exception {
+        var own = document(1001L, 9L, 101L, "in scope", "selected");
+        var excluded = document(1002L, 9L, 999L, "out of scope", "excluded");
+        var response = searchResponse(own, excluded);
+        when(client.search(any(SearchRequest.class), eq(KeywordDocument.class))).thenReturn(response);
+        var found = index.search(new KeywordQuery(9, "query", 5, java.util.Set.of(101L, 102L)));
+        var request = ArgumentCaptor.forClass(SearchRequest.class);
+        verify(client).search(request.capture(), eq(KeywordDocument.class));
+        assertThat(request.getValue().query().toString()).contains("terms", "documentId", "101", "102");
+        assertThat(found).extracting(KeywordHit::documentId).containsExactly(101L);
+    }
+
+    @Test
     void 重复写入以稳定chunkId覆盖并逐项检查bulk响应() throws Exception {
         BulkResponse first = successfulBulkResponse(2);
         BulkResponse second = successfulBulkResponse(1);

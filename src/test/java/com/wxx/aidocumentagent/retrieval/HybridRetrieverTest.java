@@ -36,6 +36,20 @@ class HybridRetrieverTest {
 
     private ExecutorService executor;
 
+    @Test
+    void forwardsTheSameAllowlistAndRejectsLeakingAdapterHitsBeforeFusion() {
+        var ids = java.util.Set.of(201L);
+        var retriever = retriever(vectorIndex(query -> {
+            assertThat(query.documentIds()).isEqualTo(ids);
+            return List.of(vectorHit(101, 201, "allowed", .8), vectorHit(999, 999, "excluded", .99));
+        }), keywordIndex(query -> {
+            assertThat(query.documentIds()).isEqualTo(ids);
+            return List.of(keywordHit(101, 201, "allowed", 1), keywordHit(999, 999, "excluded", 100));
+        }), properties());
+        assertThat(retriever.retrieve(new RetrievalQuery(9, "query", 5, 5, 5, ids)).chunks())
+                .extracting(RetrievedChunk::documentId).containsExactly(201L);
+    }
+
     @BeforeEach
     void setUp() {
         executor = Executors.newFixedThreadPool(2);

@@ -10,11 +10,11 @@ import java.util.Map;
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.wxx.aidocumentagent.retrieval.RetrievedChunk;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.ResourceAccessException;
@@ -23,22 +23,18 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
 
 /**
- * 通用 HTTP Cross-Encoder 客户端。
+ * HTTP Cross-Encoder 客户端，支持通用 chunk ID、Cohere 和 DashScope 文本排序契约。
  *
  * <p>请求契约为 {@code {"query":"...","documents":[{"id":"chunkId","text":"..."}]}}，
  * 响应契约为 {@code {"results":[{"id":"chunkId","score":0.91}]}}。
- * 返回项按 ID 校验为请求候选的完整一一映射，绝不按数组位置关联分数。</p>
+ * 通用契约按 ID 校验完整响应；供应商契约校验零起始候选索引后映射到原始 chunk。</p>
  */
 public final class HttpCrossEncoderReranker implements Reranker {
 
     private final RerankingProperties properties;
     private final RestClient restClient;
 
-    public HttpCrossEncoderReranker(RerankingProperties properties) {
-        this(properties, createRestClient(properties));
-    }
-
-    HttpCrossEncoderReranker(RerankingProperties properties, RestClient restClient) {
+    public HttpCrossEncoderReranker(RerankingProperties properties, RestClient restClient) {
         this.properties = Objects.requireNonNull(properties, "rerankingProperties不能为空");
         this.restClient = Objects.requireNonNull(restClient, "restClient不能为空");
     }
@@ -54,13 +50,29 @@ public final class HttpCrossEncoderReranker implements Reranker {
         }
 
         List<IndexedCandidate> boundedCandidates = selectCandidates(candidates);
-        CrossEncoderRequest request = new CrossEncoderRequest(query, boundedCandidates.stream()
-                .map(candidate -> new CrossEncoderDocument(candidate.id(), truncate(candidate.chunk().content())))
-                .toList());
+        Object request;
+        if (properties.getProvider() == RerankingProperties.Provider.COHERE) {
+            request = Map.of("model", properties.getModel(), "query", query,
+                    "documents", boundedCandidates.stream()
+                            .map(candidate -> truncate(candidate.chunk().content())).toList(),
+                    "top_n", Math.min(topN, boundedCandidates.size()));
+        }
+        else if (properties.getProvider() == RerankingProperties.Provider.DASHSCOPE) {
+            request = Map.of("model", properties.getModel(), "input", Map.of("query", query,
+                    "documents", boundedCandidates.stream()
+                            .map(candidate -> truncate(candidate.chunk().content())).toList()),
+                    "parameters", Map.of("top_n", Math.min(topN, boundedCandidates.size()),
+                            "return_documents", false));
+        }
+        else {
+            request = new CrossEncoderRequest(query, boundedCandidates.stream()
+                    .map(candidate -> new CrossEncoderDocument(candidate.id(), truncate(candidate.chunk().content())))
+                    .toList());
+        }
         return sendWithRetry(request, boundedCandidates, topN);
     }
 
-    private List<RankedChunk> sendWithRetry(CrossEncoderRequest request, List<IndexedCandidate> candidates, int topN) {
+    private List<RankedChunk> sendWithRetry(Object request, List<IndexedCandidate> candidates, int topN) {
         RerankingException lastFailure = null;
         for (int attempt = 0; attempt <= properties.getMaxRetries(); attempt++) {
             try {
@@ -76,17 +88,23 @@ public final class HttpCrossEncoderReranker implements Reranker {
         throw lastFailure == null ? new RerankingException(RerankingErrorCode.INTERNAL_FAILURE) : lastFailure;
     }
 
-    private List<RankedChunk> sendOnce(CrossEncoderRequest request, List<IndexedCandidate> candidates, int topN) {
+    private List<RankedChunk> sendOnce(Object request, List<IndexedCandidate> candidates, int topN) {
         try {
-            CrossEncoderResponse response = restClient.post()
+            RestClient.ResponseSpec response = restClient.post()
                     .uri(properties.getUrl())
                     .contentType(MediaType.APPLICATION_JSON)
                     .accept(MediaType.APPLICATION_JSON)
                     .headers(this::applyAuthentication)
                     .body(request)
-                    .retrieve()
-                    .body(CrossEncoderResponse.class);
-            return mapResponse(response, candidates, topN);
+                    .retrieve();
+            if (properties.getProvider() == RerankingProperties.Provider.COHERE) {
+                return mapIndexedResponse(response.body(IndexedResponse.class), candidates, topN);
+            }
+            if (properties.getProvider() == RerankingProperties.Provider.DASHSCOPE) {
+                var dashScopeResponse = response.body(DashScopeResponse.class);
+                return mapIndexedResponse(dashScopeResponse == null ? null : dashScopeResponse.output(), candidates, topN);
+            }
+            return mapResponse(response.body(CrossEncoderResponse.class), candidates, topN);
         }
         catch (RerankingException exception) {
             throw exception;
@@ -171,6 +189,34 @@ public final class HttpCrossEncoderReranker implements Reranker {
         return List.copyOf(ranked);
     }
 
+    private List<RankedChunk> mapIndexedResponse(IndexedResponse response, List<IndexedCandidate> candidates, int topN) {
+        int expectedSize = Math.min(topN, candidates.size());
+        if (response == null || response.results() == null || response.results().size() != expectedSize) {
+            throw new RerankingException(RerankingErrorCode.INVALID_RESPONSE);
+        }
+        Map<Integer, Double> scoresByIndex = new HashMap<>(expectedSize);
+        for (IndexedScore result : response.results()) {
+            if (result == null || result.index() == null || result.index() < 0
+                    || result.index() >= candidates.size() || result.relevanceScore() == null
+                    || !Double.isFinite(result.relevanceScore())
+                    || scoresByIndex.putIfAbsent(result.index(), result.relevanceScore()) != null) {
+                throw new RerankingException(RerankingErrorCode.INVALID_RESPONSE);
+            }
+        }
+        List<ScoredCandidate> scored = scoresByIndex.entrySet().stream()
+                .map(entry -> new ScoredCandidate(candidates.get(entry.getKey()), entry.getValue()))
+                .sorted(Comparator.comparingDouble(ScoredCandidate::score).reversed()
+                        .thenComparingInt(value -> value.candidate().inputRank()))
+                .toList();
+        List<RankedChunk> ranked = new ArrayList<>(scored.size());
+        for (int index = 0; index < scored.size(); index++) {
+            ScoredCandidate candidate = scored.get(index);
+            ranked.add(new RankedChunk(candidate.candidate().chunk(), candidate.candidate().inputRank(), index + 1,
+                    candidate.score()));
+        }
+        return List.copyOf(ranked);
+    }
+
     private String truncate(String content) {
         if (content.length() <= properties.getMaxTextLength()) {
             return content;
@@ -212,14 +258,6 @@ public final class HttpCrossEncoderReranker implements Reranker {
         return false;
     }
 
-    private static RestClient createRestClient(RerankingProperties properties) {
-        Objects.requireNonNull(properties, "rerankingProperties不能为空");
-        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
-        requestFactory.setConnectTimeout(properties.getConnectTimeout());
-        requestFactory.setReadTimeout(properties.getReadTimeout());
-        return RestClient.builder().requestFactory(requestFactory).build();
-    }
-
     private record IndexedCandidate(String id, RetrievedChunk chunk, int inputRank) {
     }
 
@@ -238,5 +276,17 @@ public final class HttpCrossEncoderReranker implements Reranker {
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     private record CrossEncoderScore(String id, Double score) {
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    private record IndexedResponse(List<IndexedScore> results) {
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    private record IndexedScore(Integer index, @JsonProperty("relevance_score") Double relevanceScore) {
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    private record DashScopeResponse(IndexedResponse output) {
     }
 }

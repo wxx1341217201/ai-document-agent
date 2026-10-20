@@ -6,7 +6,7 @@ import com.wxx.aidocumentagent.retrieval.RetrievedChunk;
 
 /**
  * 对已按 RRF 排序的候选片段进行二阶段相关性排序的端口。
- * 实现必须按 chunkId 验证服务响应，不能将返回分数按数组下标绑定到候选片段。
+ * 实现必须校验远端结果和请求候选的一一对应关系；使用位置索引的供应商接口还须验证索引范围及唯一性。
  */
 public interface Reranker {
 

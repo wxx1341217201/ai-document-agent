@@ -6,6 +6,8 @@ import org.springframework.http.HttpStatus;
 /** 只向 API 暴露稳定且不含供应商异常详情的 RAG 错误码。 */
 public enum RagErrorCode implements ErrorCode {
 
+    UNREADABLE_EVIDENCE("RAG_UNREADABLE_EVIDENCE", HttpStatus.UNPROCESSABLE_ENTITY,
+            "检索到的文档正文存在乱码，无法用于问答。请先对原文件进行OCR识别或上传文字正常的版本，再重新入库"),
     CHAT_MODEL_TIMEOUT("RAG_CHAT_MODEL_TIMEOUT", HttpStatus.GATEWAY_TIMEOUT, "问答模型响应超时，请稍后重试"),
     CHAT_MODEL_UNAVAILABLE("RAG_CHAT_MODEL_UNAVAILABLE", HttpStatus.SERVICE_UNAVAILABLE,
             "问答模型暂不可用，请稍后重试"),
