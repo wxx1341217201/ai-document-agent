@@ -1536,7 +1536,7 @@ stateDiagram-v2
 
 用可重复的数据证明系统质量和稳定性，而不是只展示“接口能返回”。本模块同时负责把简历中的关键数字变成**可追溯、可重复、可解释的实验结果**。
 
-> **重要规则：** 下文中的 `91%`、`83%`、`490ms`、`89%`、`<0.5%`、`7.25s → 0.25s`、`2.3×` 都是“目标对齐值”，不是预置测试结果。必须由固定数据集和脚本真实运行产生；若真实结果未达到目标，报告必须保留真实结果，禁止硬编码、筛除失败样本或修改统计口径伪造达标。
+> **重要规则：** 下文中的 `91%`、`83%`、`490ms`、`80%`、`<0.5%`、`7.25s → 0.25s`、`2.3×` 都是“目标对齐值”，不是预置测试结果。必须由固定数据集和脚本真实运行产生；若真实结果未达到目标，报告必须保留真实结果，禁止硬编码、筛除失败样本或修改统计口径伪造达标。
 
 ### 离线评测集总规范
 
@@ -1693,7 +1693,7 @@ QA Accuracy
 
 ---
 
-### M19C：Agent Task Benchmark —— 多轮任务完成率 89%
+### M19C：Agent Task Benchmark —— 多轮任务完成率 80%
 
 #### 目标
 
@@ -1743,7 +1743,7 @@ TaskSuccessRate
 = 成功任务数 / 总任务数 × 100%
 ```
 
-目标对齐值：`>= 89%`，例如固定 100 个任务时至少成功 89 个。
+目标对齐值：`>= 80%`，例如固定 100 个任务时至少成功 80 个。本模块按 2026-10-13 的用户要求采用 80%；历史交付中的 89% 不作为本次验收阈值。
 
 报告必须同时给出三个模式各自成功率，禁止只汇总总体数据而掩盖某个 Agent 模式明显失效。
 
@@ -1897,7 +1897,7 @@ ThroughputGain
 | Retrieval-First | M14 | M19C |
 | ReAct | M15 | M19C |
 | Plan-Execute-Reflect | M16 | M19C |
-| 多轮任务完成率 89% | M14-M17 | M19C `TaskSuccessRate` |
+| 多轮任务完成率 80% | M14-M17 | M19C `TaskSuccessRate` |
 | BM25 | M08 | M19A 对照实验 |
 | Cross-Encoder 重排 | M10 | M19A 对照实验 |
 | Top-5 召回率 91% | M07-M10 | M19A `Recall@5` |
@@ -1928,7 +1928,7 @@ ThroughputGain
 - 可以比较 Vector、BM25、RRF、RRF+Rerank 四种配置。
 - 报告明确区分 QA Accuracy、拒答准确率、Agent Task Success Rate、Session Loss Rate。
 - 性能报告包含环境、并发、样本量、P50/P95/P99、错误率和原始结果。
-- 91%、83%、490ms、89%、<0.5%、7.25→0.25、2.3× 均能追溯到具体脚本、原始数据和计算公式。
+- 91%、83%、490ms、80%、<0.5%、7.25→0.25、2.3× 均能追溯到具体脚本、原始数据和计算公式。
 - 没有达到目标时，报告真实值并记录优化过程，不伪造达标。
 
 ### 模块提示词
@@ -1942,7 +1942,7 @@ M19C：建立固定 100 个 Agent 任务，覆盖 Retrieval-First/ReAct/Plan-Exe
 M19D：执行至少 1000 次恢复样本，注入 Redis 丢失/重启、应用重启、Agent 中断、Worker 中断和 WebSocket 断线，计算 SessionLossRate 与恢复耗时。
 M19E：使用同一数据和硬件做同步串行 vs RabbitMQ 分段异步 A/B，至少记录 submit_ack_latency、queue_wait_latency、processing_latency、end_to_end_latency、throughput、错误率、CPU/内存、queue depth，并测试 batchSize 及 consumer concurrency。
 
-目标对齐值是 Recall@5 91%、QA Accuracy 83%、retrieval P95 490ms、Agent TaskSuccessRate 89%、SessionLossRate <0.5%、等待指标约 7.25s->0.25s、吞吐提升 2.3x。它们只能由真实 Benchmark 产生；若未达标必须输出真实结果，严禁硬编码、删除失败样本、修改公式或模糊统计口径。
+目标对齐值是 Recall@5 91%、QA Accuracy 83%、retrieval P95 490ms、Agent TaskSuccessRate 80%、SessionLossRate <0.5%、等待指标约 7.25s->0.25s、吞吐提升 2.3x。它们只能由真实 Benchmark 产生；若未达标必须输出真实结果，严禁硬编码、删除失败样本、修改公式或模糊统计口径。
 
 通过 Actuator/Micrometer 增加文档摄取、检索、模型、Agent、RabbitMQ batch 指标，严格控制 tag 基数。
 所有报告记录 Git commit、数据集版本、模型/配置、硬件环境和测试时间，并保存原始 JSON/CSV 与 Markdown 汇总。
@@ -2206,7 +2206,7 @@ git diff --check
 - [ ] M19C Agent Benchmark 可生成三种 Agent 的 TaskSuccessRate。
 - [ ] M19D 故障注入可生成 SessionLossRate 与恢复耗时。
 - [ ] M19E 同步/异步 A/B 可生成等待时间、吞吐、错误率和资源使用对比。
-- [ ] 简历中的 91%、83%、490ms、89%、<0.5%、7.25→0.25、2.3× 均有原始数据和公式可追溯；未真实达到的数字不得写成已达成。
+- [ ] 简历中的 91%、83%、490ms、80%、<0.5%、7.25→0.25、2.3× 均有原始数据和公式可追溯；未真实达到的数字不得写成已达成。
 - [ ] 关键异常路径有稳定错误码。
 - [ ] 所有外部调用有超时和有限重试。
 - [ ] 无跨知识库数据泄露。
