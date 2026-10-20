@@ -17,7 +17,7 @@ export function formatDateTime(value?: string | null): string {
 }
 
 export function formatBytes(value?: number | null): string {
-  if (value === undefined || value === null || value < 0) {
+  if (value === undefined || value === null || !Number.isFinite(value) || value < 0) {
     return '—';
   }
 
@@ -37,4 +37,10 @@ export function abbreviateHash(value?: string | null): string {
   }
 
   return value.length <= 24 ? value : `${value.slice(0, 12)}…${value.slice(-8)}`;
+}
+
+export function formatCitationPages(pageFrom: number | null, pageTo: number | null): string {
+  if (pageFrom === null && pageTo === null) return '后端未返回页码';
+  if (pageFrom !== null && pageTo !== null && pageFrom === pageTo) return `第 ${pageFrom} 页`;
+  return `第 ${pageFrom ?? '—'} 至 ${pageTo ?? '—'} 页`;
 }

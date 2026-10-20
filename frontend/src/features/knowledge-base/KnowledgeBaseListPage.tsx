@@ -1,14 +1,14 @@
 import {
   DeleteOutlined,
   EditOutlined,
-  EyeOutlined,
+  FolderOpenOutlined,
+  MoreOutlined,
   PlusOutlined,
   SearchOutlined,
 } from '@ant-design/icons';
-import { Button, Input, Table, Tooltip, message } from 'antd';
-import type { TableColumnsType } from 'antd';
+import { App, Button, Card, Dropdown, Input, Pagination } from 'antd';
 import { useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import type { KnowledgeBase, UpsertKnowledgeBaseRequest } from '../../api/contracts';
 import { ConfirmDeleteModal, EmptyState, PageError, PageLoading } from '../../components/feedback';
 import { PageHeader } from '../../components/layout/PageHeader';
@@ -25,9 +25,9 @@ import {
 const DEFAULT_PAGE_SIZE = 20;
 
 export function KnowledgeBaseListPage() {
-  const navigate = useNavigate();
+  const { message } = App.useApp();
   const [page, setPage] = useState(0);
-  const [size, setSize] = useState(DEFAULT_PAGE_SIZE);
+  const size = DEFAULT_PAGE_SIZE;
   const [searchText, setSearchText] = useState('');
   const [createOpen, setCreateOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<KnowledgeBase>();
@@ -46,64 +46,6 @@ export function KnowledgeBaseListPage() {
       ? content.filter((knowledgeBase) => knowledgeBase.name.toLocaleLowerCase().includes(keyword))
       : content;
   }, [listQuery.data?.content, searchText]);
-
-  const columns: TableColumnsType<KnowledgeBase> = [
-    {
-      title: '名称',
-      dataIndex: 'name',
-      render: (name: string, record) => <Link to={`/knowledge-bases/${record.id}`}>{name}</Link>,
-    },
-    {
-      title: '描述',
-      dataIndex: 'description',
-      ellipsis: true,
-      render: (description: string | null) => description || '—',
-    },
-    {
-      title: '创建时间',
-      dataIndex: 'createdAt',
-      width: 170,
-      render: formatDateTime,
-    },
-    {
-      title: '更新时间',
-      dataIndex: 'updatedAt',
-      width: 170,
-      render: formatDateTime,
-    },
-    {
-      title: '操作',
-      key: 'actions',
-      width: 180,
-      render: (_, record) => (
-        <span className="table-actions">
-          <Tooltip title="进入知识库">
-            <Button
-              type="link"
-              size="small"
-              icon={<EyeOutlined />}
-              aria-label={`查看 ${record.name}`}
-              onClick={() => navigate(`/knowledge-bases/${record.id}`)}
-            >
-              进入
-            </Button>
-          </Tooltip>
-          <Button type="link" size="small" icon={<EditOutlined />} onClick={() => openEdit(record)}>
-            编辑
-          </Button>
-          <Button
-            type="link"
-            danger
-            size="small"
-            icon={<DeleteOutlined />}
-            onClick={() => openDelete(record)}
-          >
-            删除
-          </Button>
-        </span>
-      ),
-    },
-  ];
 
   function openEdit(knowledgeBase: KnowledgeBase) {
     updateMutation.reset();
@@ -176,14 +118,22 @@ export function KnowledgeBaseListPage() {
         }
       />
 
-      <Input
-        className="knowledge-base-search"
-        value={searchText}
-        prefix={<SearchOutlined />}
-        placeholder="按名称搜索当前页"
-        allowClear
-        onChange={(event) => setSearchText(event.target.value)}
-      />
+      <div className="library-toolbar">
+        <div className="library-count">
+          我的知识库 <span>{listQuery.data?.totalElements ?? '—'}</span>
+        </div>
+        <div className="library-toolbar-actions">
+          <Input
+            className="knowledge-base-search"
+            value={searchText}
+            prefix={<SearchOutlined />}
+            placeholder="按名称搜索当前页"
+            aria-label="按名称搜索当前页"
+            allowClear
+            onChange={(event) => setSearchText(event.target.value)}
+          />
+        </div>
+      </div>
 
       {listQuery.isLoading ? <PageLoading label="正在加载知识库…" /> : null}
       {listQuery.isError ? (
@@ -197,33 +147,68 @@ export function KnowledgeBaseListPage() {
               ? '搜索仅筛选当前页；可清除搜索或翻页继续查找。'
               : '创建知识库后即可开始上传文档。'
           }
-          action={
-            !isFilteredEmpty ? (
-              <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateOpen(true)}>
-                新建知识库
-              </Button>
-            ) : undefined
-          }
         />
       ) : null}
       {listQuery.isSuccess && hasContent ? (
-        <Table
-          className="knowledge-base-table"
-          rowKey="id"
-          columns={columns}
-          dataSource={filteredKnowledgeBases}
-          pagination={{
-            current: page + 1,
-            pageSize: size,
-            total: listQuery.data.totalElements,
-            showSizeChanger: true,
-            showTotal: (total) => `共 ${total} 个知识库`,
-          }}
-          onChange={(pagination) => {
-            const nextSize = pagination.pageSize ?? size;
-            setSize(nextSize);
-            setPage(nextSize === size ? (pagination.current ?? 1) - 1 : 0);
-          }}
+        <>
+          <div className="knowledge-base-grid">
+            {filteredKnowledgeBases.map((knowledgeBase) => (
+              <Card key={knowledgeBase.id} className="knowledge-base-card">
+                <div className="knowledge-base-card-top">
+                  <span className="library-folder-icon">
+                    <FolderOpenOutlined />
+                  </span>
+                  <Dropdown
+                    trigger={['click']}
+                    menu={{
+                      items: [
+                        {
+                          key: 'edit',
+                          label: '编辑',
+                          icon: <EditOutlined />,
+                          onClick: () => openEdit(knowledgeBase),
+                        },
+                        {
+                          key: 'delete',
+                          label: '删除',
+                          icon: <DeleteOutlined />,
+                          danger: true,
+                          onClick: () => openDelete(knowledgeBase),
+                        },
+                      ],
+                    }}
+                  >
+                    <Button
+                      type="text"
+                      icon={<MoreOutlined />}
+                      aria-label={`更多操作 ${knowledgeBase.name}`}
+                    />
+                  </Dropdown>
+                </div>
+                <h3>
+                  <Link to={`/knowledge-bases/${knowledgeBase.id}`}>{knowledgeBase.name}</Link>
+                </h3>
+                <p className="knowledge-base-card-description">
+                  {knowledgeBase.description || '将资料汇集于此，开始新的探索。'}
+                </p>
+                <div className="knowledge-base-card-date">
+                  更新于 {formatDateTime(knowledgeBase.updatedAt)}
+                </div>
+              </Card>
+            ))}
+          </div>
+        </>
+      ) : null}
+      {listQuery.isSuccess ? (
+        <Pagination
+          className="library-pagination"
+          current={page + 1}
+          pageSize={size}
+          total={listQuery.data.totalElements}
+          hideOnSinglePage
+          showSizeChanger={false}
+          showTotal={(total) => `共 ${total} 个知识库`}
+          onChange={(current) => setPage(current - 1)}
         />
       ) : null}
 

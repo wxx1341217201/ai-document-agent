@@ -67,9 +67,9 @@ export async function apiRequest<T>(config: ApiRequestConfig): Promise<T> {
       throw new ApiClientError({
         httpStatus: response.status,
         code: body.code,
-        message: body.message || '请求未能完成，请稍后重试。',
+        message: publicErrorMessage(body.message, body.code, response.status),
         traceId: body.traceId,
-        fieldErrors: toFieldErrors(body.data),
+        fieldErrors: response.status === 400 ? toFieldErrors(body.data) : undefined,
       });
     }
 
@@ -92,9 +92,9 @@ export function normalizeApiError(error: unknown): ApiError {
     return {
       httpStatus: error.httpStatus,
       code: error.code,
-      message: error.message,
+      message: publicErrorMessage(error.message, error.code, error.httpStatus),
       traceId: error.traceId,
-      fieldErrors: error.fieldErrors,
+      fieldErrors: error.httpStatus === 400 ? toFieldErrors(error.fieldErrors) : undefined,
     };
   }
 
@@ -104,15 +104,20 @@ export function normalizeApiError(error: unknown): ApiError {
       return {
         httpStatus: error.response?.status,
         code: body.code,
-        message: body.message || fallbackMessage(error.response?.status),
+        message: publicErrorMessage(body.message, body.code, error.response?.status),
         traceId: body.traceId,
-        fieldErrors: toFieldErrors(body.data),
+        fieldErrors: error.response?.status === 400 ? toFieldErrors(body.data) : undefined,
       };
     }
 
     return {
       httpStatus: error.response?.status,
-      code: error.code === 'ECONNABORTED' ? 'REQUEST_TIMEOUT' : 'NETWORK_ERROR',
+      code:
+        error.code === 'ECONNABORTED'
+          ? 'REQUEST_TIMEOUT'
+          : error.response
+            ? 'HTTP_ERROR'
+            : 'NETWORK_ERROR',
       message: fallbackMessage(error.response?.status, error.code),
     };
   }
@@ -136,7 +141,7 @@ function toFieldErrors(value: unknown): Record<string, string> | undefined {
   if (Array.isArray(value)) {
     const errors = value.reduce<Record<string, string>>((result, item) => {
       if (isFieldValidationError(item)) {
-        result[item.field] = item.message;
+        result[item.field] = publicErrorMessage(item.message, 'VALIDATION_ERROR', 400);
       }
       return result;
     }, {});
@@ -147,7 +152,7 @@ function toFieldErrors(value: unknown): Record<string, string> | undefined {
     const errors = Object.entries(value).reduce<Record<string, string>>(
       (result, [field, message]) => {
         if (typeof message === 'string') {
-          result[field] = message;
+          result[field] = publicErrorMessage(message, 'VALIDATION_ERROR', 400);
         }
         return result;
       },
@@ -188,4 +193,20 @@ function fallbackMessage(status?: number, axiosCode?: string): string {
         ? '服务暂时不可用，请稍后重试。'
         : '网络连接不可用，请检查后重试。';
   }
+}
+
+/** The API envelope is untrusted too. Preserve public validation text, but never
+ * display obvious stack traces, SQL, storage paths or credentials to users.
+ */
+function publicErrorMessage(message: string, code: string, status?: number): string {
+  if (code === 'MODEL_TIMEOUT' || code === 'MODEL_UNAVAILABLE')
+    return '模型服务暂时不可用，请稍后重试。';
+  if (
+    !message ||
+    /\bat\s+[\w.$]+\([^)]*\.java:\d+\)|(?:jdbc|redis|amqp):\/\/|\b(?:SELECT|INSERT|UPDATE|DELETE)\s+.+\b(?:FROM|INTO|SET)\b|[A-Za-z]:[\\/]|\/(?:var|etc|home|srv|opt)\/|(?:password|api[_-]?key|secret)\s*[:=]|<\/?think\b/i.test(
+      message,
+    )
+  )
+    return fallbackMessage(status);
+  return message;
 }

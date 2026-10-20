@@ -12,6 +12,7 @@ interface RagAnswerMarkdownProps {
   answer: string;
   citations: RagCitation[];
   onCitationClick: (citation: RagCitation) => void;
+  disableImages?: boolean;
 }
 
 /**
@@ -22,6 +23,7 @@ export function RagAnswerMarkdown({
   answer,
   citations,
   onCitationClick,
+  disableImages = false,
 }: RagAnswerMarkdownProps) {
   const citationsById = useMemo(
     () =>
@@ -71,6 +73,7 @@ export function RagAnswerMarkdown({
     <div className="rag-answer-markdown">
       <Markdown
         skipHtml
+        disallowedElements={disableImages ? ['img'] : undefined}
         remarkPlugins={[citationPlugin]}
         components={components}
         urlTransform={safeUrlTransform}

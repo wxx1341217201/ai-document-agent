@@ -11,18 +11,20 @@ function resourcePath(knowledgeBaseId: number) {
 }
 
 export const documentApi = {
-  list(knowledgeBaseId: number, params: PaginationParams) {
+  list(knowledgeBaseId: number, params: PaginationParams, signal?: AbortSignal) {
     return apiRequest<PageResponse<DocumentRecord>>({
       method: 'GET',
       url: resourcePath(knowledgeBaseId),
       params,
+      signal,
     });
   },
 
-  get(knowledgeBaseId: number, documentId: number) {
+  get(knowledgeBaseId: number, documentId: number, signal?: AbortSignal) {
     return apiRequest<DocumentRecord>({
       method: 'GET',
       url: `${resourcePath(knowledgeBaseId)}/${documentId}`,
+      signal,
     });
   },
 

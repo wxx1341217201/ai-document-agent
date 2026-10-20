@@ -1,4 +1,7 @@
 import type { DocumentRecord, KnowledgeBase } from '../../api/contracts';
+import { resetConversationFixtures } from './conversation-fixtures';
+import { resetExecutionFixtures } from './execution-fixtures';
+import { resetReadingFixtures } from './reading-fixtures';
 
 const createdAt = '2026-09-20T08:30:00';
 const updatedAt = '2026-09-20T10:45:00';
@@ -58,8 +61,13 @@ let knowledgeBases: KnowledgeBase[];
 let documentsByKnowledgeBase: Record<number, DocumentRecord[]>;
 let nextKnowledgeBaseId: number;
 let nextDocumentId: number;
+const uploadedFiles = new Map<number, File>();
 
 export function resetFixtures() {
+  uploadedFiles.clear();
+  resetConversationFixtures();
+  resetExecutionFixtures();
+  resetReadingFixtures();
   knowledgeBases = structuredClone(initialKnowledgeBases);
   documentsByKnowledgeBase = structuredClone(initialDocuments);
   nextKnowledgeBaseId = 3;
@@ -139,7 +147,12 @@ export function addDocument(knowledgeBaseId: number, file: File) {
     updatedAt,
   };
   documentsByKnowledgeBase[knowledgeBaseId] = [...getDocuments(knowledgeBaseId), document];
+  uploadedFiles.set(document.id, file);
   return document;
+}
+
+export function getUploadedFile(documentId: number) {
+  return uploadedFiles.get(documentId);
 }
 
 export function updateDocument(
@@ -159,6 +172,7 @@ export function updateDocument(
 }
 
 export function removeDocument(knowledgeBaseId: number, documentId: number) {
+  uploadedFiles.delete(documentId);
   documentsByKnowledgeBase[knowledgeBaseId] = getDocuments(knowledgeBaseId).filter(
     (document) => document.id !== documentId,
   );

@@ -4,7 +4,7 @@ import App from './app/App';
 import './styles/index.css';
 
 async function enableMocking() {
-  if (import.meta.env.VITE_USE_MSW !== 'true') {
+  if (!import.meta.env.DEV || import.meta.env.VITE_USE_MSW !== 'true') {
     return;
   }
 

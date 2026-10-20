@@ -1,5 +1,16 @@
 import { HttpResponse, http } from 'msw';
-import type { ApiResponse, PageResponse } from '../../api/contracts';
+import type { ApiResponse, ConversationAgentMode, PageResponse } from '../../api/contracts';
+import { executionHandlers } from './execution-handlers';
+import { documentPreviewHandlers } from './document-preview-handlers';
+import { readingHandlers } from './reading-handlers';
+import {
+  addConversation,
+  addConversationTurn,
+  getConversation,
+  getConversationMessages,
+  getConversations,
+  removeConversation,
+} from './conversation-fixtures';
 import {
   addDocument,
   addKnowledgeBase,
@@ -17,6 +28,106 @@ const API_PATH = '*/api/v1';
 const traceId = 'mock-trace-id';
 
 export const handlers = [
+  ...readingHandlers,
+  // Planned public health endpoint; current backend has no SystemController.
+  http.get(`${API_PATH}/system/health`, () =>
+    success({
+      status: 'UP',
+      components: {
+        database: 'UP',
+        redis: 'UP',
+        rabbitmq: 'UP',
+        qdrant: 'UP',
+        elasticsearch: 'UP',
+      },
+    }),
+  ),
+  ...executionHandlers,
+  ...documentPreviewHandlers,
+  http.get(`${API_PATH}/dashboard/knowledge-bases`, ({ request }) =>
+    success(page([...getKnowledgeBases()].sort(recentOrder), request)),
+  ),
+  http.get(`${API_PATH}/dashboard/documents`, ({ request }) =>
+    success(
+      page(
+        getKnowledgeBases()
+          .flatMap((kb) => getDocuments(kb.id))
+          .sort(recentOrder),
+        request,
+      ),
+    ),
+  ),
+  http.get(`${API_PATH}/documents/recent`, () =>
+    success(
+      getKnowledgeBases()
+        .flatMap((kb) => getDocuments(kb.id))
+        .sort(
+          (left, right) =>
+            Date.parse(right.updatedAt) - Date.parse(left.updatedAt) || right.id - left.id,
+        )
+        .slice(0, 5),
+    ),
+  ),
+  // FE06 contract Mock. Production calls the real ConversationController endpoints.
+  http.get(`${API_PATH}/knowledge-bases/:knowledgeBaseId/conversations`, ({ params, request }) => {
+    const knowledgeBaseId = numberParam(params.knowledgeBaseId);
+    if (!getKnowledgeBase(knowledgeBaseId))
+      return failure(404, 'KNOWLEDGE_BASE_NOT_FOUND', '知识库不存在');
+    return success(page(getConversations(knowledgeBaseId), request));
+  }),
+  http.post(
+    `${API_PATH}/knowledge-bases/:knowledgeBaseId/conversations`,
+    async ({ params, request }) => {
+      const knowledgeBaseId = numberParam(params.knowledgeBaseId);
+      if (!getKnowledgeBase(knowledgeBaseId))
+        return failure(404, 'KNOWLEDGE_BASE_NOT_FOUND', '知识库不存在');
+      const input = (await request.json()) as { title?: unknown; agentMode?: unknown };
+      if (
+        input.title !== undefined &&
+        (typeof input.title !== 'string' || input.title.length > 128)
+      ) {
+        return failure(400, 'VALIDATION_ERROR', '参数校验失败', [
+          { field: 'title', message: '会话标题不能超过128个字符' },
+        ]);
+      }
+      const mode = input.agentMode ?? 'RETRIEVAL_FIRST';
+      if (!['RAG', 'RETRIEVAL_FIRST', 'REACT', 'PLAN_EXECUTE_REFLECT'].includes(String(mode))) {
+        return failure(400, 'BAD_REQUEST', 'Agent 模式不合法');
+      }
+      return success(
+        addConversation(knowledgeBaseId, {
+          title: input.title as string | undefined,
+          agentMode: mode as ConversationAgentMode,
+        }),
+        201,
+      );
+    },
+  ),
+  http.get(`${API_PATH}/conversations/:conversationId/messages`, ({ params, request }) => {
+    const conversationId = numberParam(params.conversationId);
+    if (!getConversation(conversationId))
+      return failure(404, 'CONVERSATION_NOT_FOUND', '会话不存在');
+    return success(page(getConversationMessages(conversationId), request));
+  }),
+  http.post(`${API_PATH}/conversations/:conversationId/messages`, async ({ params, request }) => {
+    const conversationId = numberParam(params.conversationId);
+    if (!getConversation(conversationId))
+      return failure(404, 'CONVERSATION_NOT_FOUND', '会话不存在');
+    const input = (await request.json()) as { content?: unknown };
+    if (typeof input.content !== 'string' || !input.content.trim() || input.content.length > 2000) {
+      return failure(400, 'VALIDATION_ERROR', '参数校验失败', [
+        { field: 'content', message: '消息不能为空且不能超过2000个字符' },
+      ]);
+    }
+    return success(addConversationTurn(conversationId, input.content.trim()));
+  }),
+  http.delete(`${API_PATH}/conversations/:conversationId`, ({ params }) => {
+    const conversationId = numberParam(params.conversationId);
+    if (!getConversation(conversationId))
+      return failure(404, 'CONVERSATION_NOT_FOUND', '会话不存在');
+    removeConversation(conversationId);
+    return success(null);
+  }),
   http.get(`${API_PATH}/knowledge-bases`, ({ request }) => {
     return success(page(getKnowledgeBases(), request));
   }),
@@ -270,4 +381,11 @@ function page<T>(items: T[], request: Request): PageResponse<T> {
 function numberParam(value: readonly string[] | string | undefined): number {
   const rawValue = Array.isArray(value) ? value[0] : value;
   return Number(rawValue);
+}
+
+function recentOrder(
+  left: { id: number; updatedAt: string },
+  right: { id: number; updatedAt: string },
+) {
+  return Date.parse(right.updatedAt) - Date.parse(left.updatedAt) || right.id - left.id;
 }

@@ -38,7 +38,7 @@ export function KnowledgeBaseFormModal({
       okText={mode === 'create' ? '创建' : '保存'}
       cancelText="取消"
       confirmLoading={loading}
-      destroyOnClose
+      destroyOnHidden
       onCancel={onCancel}
       onOk={() => form.submit()}
     >

@@ -12,14 +12,14 @@ export function PageHeader({
 }) {
   return (
     <Flex className="page-header" justify="space-between" align="flex-start" gap="middle" wrap>
-      <div>
+      <div className="page-header-copy">
         <Typography.Title level={2}>{title}</Typography.Title>
         {description ? (
           <Typography.Paragraph type="secondary">{description}</Typography.Paragraph>
         ) : null}
       </div>
       {actions ? (
-        <Flex gap="small" wrap>
+        <Flex className="page-header-actions" gap="small" wrap>
           {actions}
         </Flex>
       ) : null}

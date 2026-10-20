@@ -40,3 +40,7 @@ export function processingStage(status: DocumentStatus): { percent: number; labe
 export function shouldPollDocumentStatus(status: DocumentStatus): boolean {
   return isDocumentProcessing(status);
 }
+export function safeDownloadName(name: string) {
+  // eslint-disable-next-line no-control-regex -- downloaded filenames must not contain control characters
+  return name.replace(/[\\/<>:"|?*\u0000-\u001f\u007f]/g, '_').trim() || 'document';
+}

@@ -9,6 +9,8 @@ test('知识库和文档处理主流程可访问', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'CO₂ 催化研究' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'catalyst-paper.pdf' })).toBeVisible();
 
+  await expect(page.locator('input[type="file"]')).toHaveCount(0);
+  await page.getByRole('button', { name: '上传文档' }).click();
   await page.locator('input[type="file"]').setInputFiles({
     name: 'notes.txt',
     mimeType: 'text/plain',

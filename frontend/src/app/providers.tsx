@@ -3,6 +3,7 @@ import { App as AntdApp, ConfigProvider } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
+import { appTheme } from '../styles/theme';
 
 export function AppProviders({ children }: { children: ReactNode }) {
   const [queryClient] = useState(
@@ -27,7 +28,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
   );
 
   return (
-    <ConfigProvider locale={zhCN} theme={{ token: { colorPrimary: '#1677ff', borderRadius: 8 } }}>
+    <ConfigProvider locale={zhCN} theme={appTheme}>
       <AntdApp>
         <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
       </AntdApp>

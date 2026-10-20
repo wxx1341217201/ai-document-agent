@@ -1,16 +1,15 @@
-import { EditOutlined, MessageOutlined, UploadOutlined } from '@ant-design/icons';
-import { Button, Descriptions, Tabs } from 'antd';
+import { SettingOutlined, MessageOutlined, UploadOutlined } from '@ant-design/icons';
+import { Button } from 'antd';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ErrorResult, PageError, PageLoading } from '../../components/feedback';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { useUiStore } from '../../stores/ui.store';
-import { formatDateTime } from '../../utils/format';
 import { parsePositiveRouteId } from '../../utils/route-params';
 import { DocumentTable } from '../document/DocumentTable';
 import { DocumentUploadDragger } from '../document/DocumentUploadDragger';
+import { useDocumentList } from '../document/document.hooks';
 import { KnowledgeBaseFormModal } from './KnowledgeBaseFormModal';
-import { QuickQueryPanel } from './QuickQueryPanel';
 import { useKnowledgeBase, useUpdateKnowledgeBase } from './knowledge-base.hooks';
 
 export function KnowledgeBaseDetailPage() {
@@ -20,7 +19,8 @@ export function KnowledgeBaseDetailPage() {
   const updateMutation = useUpdateKnowledgeBase();
   const navigate = useNavigate();
   const setCurrentKnowledgeBase = useUiStore((state) => state.setCurrentKnowledgeBase);
-  const [activeTab, setActiveTab] = useState('documents');
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const documents = useDocumentList(knowledgeBaseId, { page: 0, size: 20 });
   const [editOpen, setEditOpen] = useState(false);
 
   useEffect(() => {
@@ -62,7 +62,7 @@ export function KnowledgeBaseDetailPage() {
   }
 
   function focusUpload() {
-    setActiveTab('documents');
+    setUploadOpen(true);
     requestAnimationFrame(() =>
       document.getElementById('document-upload')?.scrollIntoView({ behavior: 'smooth' }),
     );
@@ -75,8 +75,11 @@ export function KnowledgeBaseDetailPage() {
         description={knowledgeBase.description || '暂未填写知识库描述。'}
         actions={
           <>
-            <Button icon={<EditOutlined />} onClick={() => setEditOpen(true)}>
-              编辑
+            <Button
+              type="primary"
+              onClick={() => navigate(`/knowledge-bases/${knowledgeBase.id}/reading`)}
+            >
+              主题阅读
             </Button>
             <Button
               icon={<MessageOutlined />}
@@ -84,54 +87,25 @@ export function KnowledgeBaseDetailPage() {
             >
               开始问答
             </Button>
-            <Button type="primary" icon={<UploadOutlined />} onClick={focusUpload}>
+            <Button icon={<UploadOutlined />} onClick={focusUpload}>
               上传文档
             </Button>
+            <Button
+              aria-label="知识库设置"
+              title="知识库设置"
+              icon={<SettingOutlined />}
+              onClick={() => setEditOpen(true)}
+            />
           </>
         }
       />
 
-      <Tabs
-        activeKey={activeTab}
-        onChange={setActiveTab}
-        items={[
-          {
-            key: 'documents',
-            label: '文档',
-            children: (
-              <>
-                <div id="document-upload">
-                  <DocumentUploadDragger knowledgeBaseId={knowledgeBase.id} />
-                </div>
-                <DocumentTable knowledgeBaseId={knowledgeBase.id} />
-              </>
-            ),
-          },
-          {
-            key: 'quick-query',
-            label: '快速问答',
-            children: <QuickQueryPanel knowledgeBaseId={knowledgeBase.id} />,
-          },
-          {
-            key: 'info',
-            label: '信息',
-            children: (
-              <Descriptions bordered column={{ xs: 1, sm: 2 }}>
-                <Descriptions.Item label="名称">{knowledgeBase.name}</Descriptions.Item>
-                <Descriptions.Item label="描述">
-                  {knowledgeBase.description || '—'}
-                </Descriptions.Item>
-                <Descriptions.Item label="创建时间">
-                  {formatDateTime(knowledgeBase.createdAt)}
-                </Descriptions.Item>
-                <Descriptions.Item label="更新时间">
-                  {formatDateTime(knowledgeBase.updatedAt)}
-                </Descriptions.Item>
-              </Descriptions>
-            ),
-          },
-        ]}
-      />
+      <div id="document-upload">
+        {uploadOpen || (documents.isSuccess && documents.data.content.length === 0) ? (
+          <DocumentUploadDragger knowledgeBaseId={knowledgeBase.id} />
+        ) : null}
+      </div>
+      <DocumentTable knowledgeBaseId={knowledgeBase.id} />
 
       <KnowledgeBaseFormModal
         open={editOpen}

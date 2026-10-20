@@ -9,11 +9,12 @@ import type {
 const resourcePath = '/knowledge-bases';
 
 export const knowledgeBaseApi = {
-  list(params: PaginationParams) {
+  list(params: PaginationParams, signal?: AbortSignal) {
     return apiRequest<PageResponse<KnowledgeBase>>({
       method: 'GET',
       url: resourcePath,
       params,
+      signal,
     });
   },
 

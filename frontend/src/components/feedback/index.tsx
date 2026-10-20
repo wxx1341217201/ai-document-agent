@@ -12,6 +12,7 @@ import { Alert, Button, Empty, Modal, Result, Spin, Tag, Typography, message } f
 import type { ReactNode } from 'react';
 import { normalizeApiError } from '../../api/client';
 import type { DocumentStatus } from '../../api/contracts';
+import { statusMetadata } from '../../utils/status';
 
 export function PageLoading({ label = '正在加载…' }: { label?: string }) {
   return (
@@ -74,34 +75,53 @@ export function ErrorResult({
 }
 
 type SupportedStatus =
-  DocumentStatus | 'PENDING' | 'RUNNING' | 'PAUSED' | 'SUCCEEDED' | 'CANCELLED' | 'UP' | 'DOWN';
+  | DocumentStatus
+  | 'PENDING'
+  | 'RUNNING'
+  | 'PAUSED'
+  | 'SUCCEEDED'
+  | 'CANCELLED'
+  | 'UP'
+  | 'DOWN'
+  | 'UNKNOWN';
 
-const statusMeta: Record<SupportedStatus, { color: string; label: string; icon: ReactNode }> = {
-  UPLOADED: { color: 'blue', label: '上传完成', icon: <ClockCircleOutlined /> },
-  QUEUED: { color: 'gold', label: '排队中', icon: <ClockCircleOutlined /> },
-  PROCESSING: { color: 'processing', label: '处理中', icon: <LoadingOutlined /> },
-  RETRYING: { color: 'processing', label: '重试中', icon: <LoadingOutlined /> },
-  READY: { color: 'success', label: '已就绪', icon: <CheckCircleOutlined /> },
-  FAILED: { color: 'error', label: '失败', icon: <CloseCircleOutlined /> },
-  DELETED: { color: 'default', label: '已删除', icon: <CloseCircleOutlined /> },
-  PENDING: { color: 'gold', label: '等待中', icon: <ClockCircleOutlined /> },
-  RUNNING: { color: 'processing', label: '执行中', icon: <LoadingOutlined /> },
-  PAUSED: { color: 'warning', label: '已暂停', icon: <PauseCircleOutlined /> },
-  SUCCEEDED: { color: 'success', label: '已完成', icon: <CheckCircleOutlined /> },
-  CANCELLED: { color: 'default', label: '已取消', icon: <CloseCircleOutlined /> },
-  UP: { color: 'success', label: '正常', icon: <CheckCircleOutlined /> },
-  DOWN: { color: 'error', label: '不可用', icon: <CloseCircleOutlined /> },
+const statusIcons: Record<SupportedStatus, ReactNode> = {
+  UPLOADED: <ClockCircleOutlined />,
+  QUEUED: <ClockCircleOutlined />,
+  PROCESSING: <LoadingOutlined />,
+  RETRYING: <LoadingOutlined />,
+  READY: <CheckCircleOutlined />,
+  FAILED: <CloseCircleOutlined />,
+  DELETED: <CloseCircleOutlined />,
+  PENDING: <ClockCircleOutlined />,
+  RUNNING: <LoadingOutlined />,
+  PAUSED: <PauseCircleOutlined />,
+  SUCCEEDED: <CheckCircleOutlined />,
+  CANCELLED: <CloseCircleOutlined />,
+  UP: <CheckCircleOutlined />,
+  DOWN: <CloseCircleOutlined />,
+  UNKNOWN: <ExclamationCircleOutlined />,
 };
 
 export function StatusTag({ status }: { status: SupportedStatus | string }) {
-  const meta = statusMeta[status as SupportedStatus] ?? {
-    color: 'default',
-    label: status || '未知状态',
-    icon: <ExclamationCircleOutlined />,
+  const publicStatus = statusMetadata(status);
+  const meta = {
+    ...publicStatus,
+    icon: Object.hasOwn(statusIcons, status) ? (
+      statusIcons[status as SupportedStatus]
+    ) : (
+      <ExclamationCircleOutlined />
+    ),
   };
 
   return (
-    <Tag icon={meta.icon} color={meta.color} role="status" aria-label={`状态：${meta.label}`}>
+    <Tag
+      className="status-tag"
+      icon={meta.icon}
+      color={meta.color}
+      role="status"
+      aria-label={`状态：${meta.label}`}
+    >
       {meta.label}
     </Tag>
   );
