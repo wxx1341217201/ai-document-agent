@@ -1,0 +1,200 @@
+{"id": "C250-1", "knowledgeBaseId": 2, "question": "What is the title and author printed at the start of Alice's book?", "answerable": true, "expectedChunkIds": [250], "tags": ["exact"]}
+{"id": "C250-2", "knowledgeBaseId": 2, "question": "Which novel opens with a Lewis Carroll title page and chapter contents?", "answerable": true, "expectedChunkIds": [250], "tags": ["semantic"]}
+{"id": "C250-3", "knowledgeBaseId": 2, "question": "开头注明刘易斯·卡罗尔及《爱丽丝梦游仙境》的片段是哪一段？", "answerable": true, "expectedChunkIds": [250], "tags": ["chinese_synonym"]}
+{"id": "C250-4", "knowledgeBaseId": 2, "question": "Which title page is Alice's Adventures in Wonderland, rather than Pride and Prejudice?", "answerable": true, "expectedChunkIds": [250], "tags": ["distractor"]}
+{"id": "C251-1", "knowledgeBaseId": 2, "question": "How many miles down does Alice guess she has fallen?", "answerable": true, "expectedChunkIds": [251], "tags": ["exact"]}
+{"id": "C251-2", "knowledgeBaseId": 2, "question": "What distance does Alice imagine during her descent down the rabbit hole?", "answerable": true, "expectedChunkIds": [251], "tags": ["semantic"]}
+{"id": "C251-3", "knowledgeBaseId": 2, "question": "爱丽丝下坠时猜自己已经落下多少英里？", "answerable": true, "expectedChunkIds": [251], "tags": ["chinese_synonym"]}
+{"id": "C251-4", "knowledgeBaseId": 2, "question": "Which passage estimates a four-thousand-mile fall, rather than a nine-foot height?", "answerable": true, "expectedChunkIds": [251], "tags": ["distractor"]}
+{"id": "C252-1", "knowledgeBaseId": 2, "question": "What object lies on the little glass table?", "answerable": true, "expectedChunkIds": [252], "tags": ["exact"]}
+{"id": "C252-2", "knowledgeBaseId": 2, "question": "What does Alice find on a transparent table near the doors?", "answerable": true, "expectedChunkIds": [252], "tags": ["semantic"]}
+{"id": "C252-3", "knowledgeBaseId": 2, "question": "玻璃小桌上放着什么，爱丽丝认为它可能开门？", "answerable": true, "expectedChunkIds": [252], "tags": ["chinese_synonym"]}
+{"id": "C252-4", "knowledgeBaseId": 2, "question": "Which chunk has a golden key on a glass table, rather than a key in the rabbit's hand?", "answerable": true, "expectedChunkIds": [252], "tags": ["distractor"]}
+{"id": "C253-1", "knowledgeBaseId": 2, "question": "What garden does Alice hope to enter after shrinking?", "answerable": true, "expectedChunkIds": [253], "tags": ["exact"]}
+{"id": "C253-2", "knowledgeBaseId": 2, "question": "Why is Alice pleased when she becomes small enough for a little door?", "answerable": true, "expectedChunkIds": [253], "tags": ["semantic"]}
+{"id": "C253-3", "knowledgeBaseId": 2, "question": "爱丽丝变小后想穿过小门进入哪里？", "answerable": true, "expectedChunkIds": [253], "tags": ["chinese_synonym"]}
+{"id": "C253-4", "knowledgeBaseId": 2, "question": "Which scene concerns shrinking for a garden door rather than growing against the hall roof?", "answerable": true, "expectedChunkIds": [253], "tags": ["distractor"]}
+{"id": "C254-1", "knowledgeBaseId": 2, "question": "How tall is Alice when her head hits the hall roof?", "answerable": true, "expectedChunkIds": [254], "tags": ["exact"]}
+{"id": "C254-2", "knowledgeBaseId": 2, "question": "At what height does the ceiling stop Alice's growth in the hall?", "answerable": true, "expectedChunkIds": [254], "tags": ["semantic"]}
+{"id": "C254-3", "knowledgeBaseId": 2, "question": "爱丽丝头碰到大厅屋顶时身高超过多少英尺？", "answerable": true, "expectedChunkIds": [254], "tags": ["chinese_synonym"]}
+{"id": "C254-4", "knowledgeBaseId": 2, "question": "Which passage describes being over nine feet tall, rather than fitting through the garden door?", "answerable": true, "expectedChunkIds": [254], "tags": ["distractor"]}
+{"id": "C255-1", "knowledgeBaseId": 2, "question": "Which creature grins and welcomes little fishes in Alice's recitation?", "answerable": true, "expectedChunkIds": [255], "tags": ["exact"]}
+{"id": "C255-2", "knowledgeBaseId": 2, "question": "What animal appears in Alice's mistaken poem about smiling at fish?", "answerable": true, "expectedChunkIds": [255], "tags": ["semantic"]}
+{"id": "C255-3", "knowledgeBaseId": 2, "question": "爱丽丝背错的诗里，咧嘴笑并欢迎小鱼的是什么动物？", "answerable": true, "expectedChunkIds": [255], "tags": ["chinese_synonym"]}
+{"id": "C255-4", "knowledgeBaseId": 2, "question": "Which passage contains the crocodile-like fish poem, rather than the Cheshire Cat's grin?", "answerable": true, "expectedChunkIds": [255], "tags": ["distractor"]}
+{"id": "C256-1", "knowledgeBaseId": 2, "question": "What animal splashes into the pool near Alice?", "answerable": true, "expectedChunkIds": [256], "tags": ["exact"]}
+{"id": "C256-2", "knowledgeBaseId": 2, "question": "Whom does Alice discover swimming nearby after first imagining a walrus or hippopotamus?", "answerable": true, "expectedChunkIds": [256], "tags": ["semantic"]}
+{"id": "C256-3", "knowledgeBaseId": 2, "question": "爱丽丝在水池里以为是海象或河马，实际看到什么？", "answerable": true, "expectedChunkIds": [256], "tags": ["chinese_synonym"]}
+{"id": "C256-4", "knowledgeBaseId": 2, "question": "Which pool encounter is with a mouse rather than a puppy or pigeon?", "answerable": true, "expectedChunkIds": [256], "tags": ["distractor"]}
+{"id": "C257-1", "knowledgeBaseId": 2, "question": "What animal is said to kill rats and be worth a hundred pounds?", "answerable": true, "expectedChunkIds": [257], "tags": ["exact"]}
+{"id": "C257-2", "knowledgeBaseId": 2, "question": "Which useful creature belongs to a farmer in Alice's story to the Mouse?", "answerable": true, "expectedChunkIds": [257], "tags": ["semantic"]}
+{"id": "C257-3", "knowledgeBaseId": 2, "question": "爱丽丝提到农夫家什么动物会捉老鼠，值一百英镑？", "answerable": true, "expectedChunkIds": [257], "tags": ["chinese_synonym"]}
+{"id": "C257-4", "knowledgeBaseId": 2, "question": "Which passage praises a rat-catching farm animal rather than the Mouse itself?", "answerable": true, "expectedChunkIds": [257], "tags": ["distractor"]}
+{"id": "C258-1", "knowledgeBaseId": 2, "question": "Who proposes adjourning the meeting for more energetic remedies?", "answerable": true, "expectedChunkIds": [258], "tags": ["exact"]}
+{"id": "C258-2", "knowledgeBaseId": 2, "question": "Which bird says the group needs a stronger way to dry off?", "answerable": true, "expectedChunkIds": [258], "tags": ["semantic"]}
+{"id": "C258-3", "knowledgeBaseId": 2, "question": "谁郑重提议散会，马上采用更有效的弄干办法？", "answerable": true, "expectedChunkIds": [258], "tags": ["chinese_synonym"]}
+{"id": "C258-4", "knowledgeBaseId": 2, "question": "Which wet-party scene features the Dodo's proposal rather than the Mouse's sad tale?", "answerable": true, "expectedChunkIds": [258], "tags": ["distractor"]}
+{"id": "C259-1", "knowledgeBaseId": 2, "question": "What does Alice mistake the Mouse's sad tale for?", "answerable": true, "expectedChunkIds": [259], "tags": ["exact"]}
+{"id": "C259-2", "knowledgeBaseId": 2, "question": "What wordplay arises when the Mouse announces a long and sad story?", "answerable": true, "expectedChunkIds": [259], "tags": ["semantic"]}
+{"id": "C259-3", "knowledgeBaseId": 2, "question": "老鼠说自己的故事很长且悲伤，爱丽丝却看着它的什么？", "answerable": true, "expectedChunkIds": [259], "tags": ["chinese_synonym"]}
+{"id": "C259-4", "knowledgeBaseId": 2, "question": "Which passage plays on tale and tail rather than the Dodo's meeting motion?", "answerable": true, "expectedChunkIds": [259], "tags": ["distractor"]}
+{"id": "C260-1", "knowledgeBaseId": 2, "question": "Whom does the White Rabbit fear will have him executed?", "answerable": true, "expectedChunkIds": [260], "tags": ["exact"]}
+{"id": "C260-2", "knowledgeBaseId": 2, "question": "Which authority worries the Rabbit as he searches for lost things?", "answerable": true, "expectedChunkIds": [260], "tags": ["semantic"]}
+{"id": "C260-3", "knowledgeBaseId": 2, "question": "白兔一边寻找东西一边害怕被谁处决？", "answerable": true, "expectedChunkIds": [260], "tags": ["chinese_synonym"]}
+{"id": "C260-4", "knowledgeBaseId": 2, "question": "Which scene has the White Rabbit fearing the Duchess rather than the Queen at croquet?", "answerable": true, "expectedChunkIds": [260], "tags": ["distractor"]}
+{"id": "C261-1", "knowledgeBaseId": 2, "question": "What happens as Alice keeps growing inside the Rabbit's house?", "answerable": true, "expectedChunkIds": [261], "tags": ["exact"]}
+{"id": "C261-2", "knowledgeBaseId": 2, "question": "How does Alice's changing size constrain her in the small room?", "answerable": true, "expectedChunkIds": [261], "tags": ["semantic"]}
+{"id": "C261-3", "knowledgeBaseId": 2, "question": "爱丽丝在兔子屋里不断变大，最后为什么只能侧躺？", "answerable": true, "expectedChunkIds": [261], "tags": ["chinese_synonym"]}
+{"id": "C261-4", "knowledgeBaseId": 2, "question": "Which growth scene fills a room rather than striking the hall ceiling?", "answerable": true, "expectedChunkIds": [261], "tags": ["distractor"]}
+{"id": "C263-1", "knowledgeBaseId": 2, "question": "What falls through the window and hits Alice's face?", "answerable": true, "expectedChunkIds": [263], "tags": ["exact"]}
+{"id": "C263-2", "knowledgeBaseId": 2, "question": "What small objects are thrown into the room during the Rabbit's attempt to remove Alice?", "answerable": true, "expectedChunkIds": [263], "tags": ["semantic"]}
+{"id": "C263-3", "knowledgeBaseId": 2, "question": "有什么小东西从窗户飞入，打在爱丽丝脸上？", "answerable": true, "expectedChunkIds": [263], "tags": ["chinese_synonym"]}
+{"id": "C263-4", "knowledgeBaseId": 2, "question": "Which scene has a shower of pebbles rather than tarts on a courtroom table?", "answerable": true, "expectedChunkIds": [263], "tags": ["distractor"]}
+{"id": "C264-1", "knowledgeBaseId": 2, "question": "Which small animal does Alice want to teach tricks?", "answerable": true, "expectedChunkIds": [264], "tags": ["exact"]}
+{"id": "C264-2", "knowledgeBaseId": 2, "question": "What creature seems dear to Alice although she is the wrong size to play with it?", "answerable": true, "expectedChunkIds": [264], "tags": ["semantic"]}
+{"id": "C264-3", "knowledgeBaseId": 2, "question": "爱丽丝想教哪只可爱的小动物做动作？", "answerable": true, "expectedChunkIds": [264], "tags": ["chinese_synonym"]}
+{"id": "C264-4", "knowledgeBaseId": 2, "question": "Which passage has a puppy rather than the farmer's rat-catching animal?", "answerable": true, "expectedChunkIds": [264], "tags": ["distractor"]}
+{"id": "C265-1", "knowledgeBaseId": 2, "question": "Who asks Alice what she cannot remember after she mentions changing size?", "answerable": true, "expectedChunkIds": [265], "tags": ["exact"]}
+{"id": "C265-2", "knowledgeBaseId": 2, "question": "Which character hears Alice complain that her memory and size are unstable?", "answerable": true, "expectedChunkIds": [265], "tags": ["semantic"]}
+{"id": "C265-3", "knowledgeBaseId": 2, "question": "爱丽丝说十分钟内身形都不固定，是谁追问她忘了什么？", "answerable": true, "expectedChunkIds": [265], "tags": ["chinese_synonym"]}
+{"id": "C265-4", "knowledgeBaseId": 2, "question": "Which conversation with the Caterpillar concerns memory rather than the Cat's directions?", "answerable": true, "expectedChunkIds": [265], "tags": ["distractor"]}
+{"id": "C266-1", "knowledgeBaseId": 2, "question": "What does the Caterpillar mean by one side and the other side?", "answerable": true, "expectedChunkIds": [266], "tags": ["exact"]}
+{"id": "C266-2", "knowledgeBaseId": 2, "question": "Which object has the two sides that might change Alice's size?", "answerable": true, "expectedChunkIds": [266], "tags": ["semantic"]}
+{"id": "C266-3", "knowledgeBaseId": 2, "question": "毛毛虫所说的一边和另一边指的是哪样东西？", "answerable": true, "expectedChunkIds": [266], "tags": ["chinese_synonym"]}
+{"id": "C266-4", "knowledgeBaseId": 2, "question": "Which passage explains mushroom sides rather than the two directions to the Hatter and Hare?", "answerable": true, "expectedChunkIds": [266], "tags": ["distractor"]}
+{"id": "C267-1", "knowledgeBaseId": 2, "question": "Which bird doubts Alice's claim that she is a little girl?", "answerable": true, "expectedChunkIds": [267], "tags": ["exact"]}
+{"id": "C267-2", "knowledgeBaseId": 2, "question": "Who treats Alice's identity explanation as an invented story?", "answerable": true, "expectedChunkIds": [267], "tags": ["semantic"]}
+{"id": "C267-3", "knowledgeBaseId": 2, "question": "哪只鸟不相信爱丽丝自称小女孩？", "answerable": true, "expectedChunkIds": [267], "tags": ["chinese_synonym"]}
+{"id": "C267-4", "knowledgeBaseId": 2, "question": "Which identity dispute involves the Pigeon rather than the Caterpillar?", "answerable": true, "expectedChunkIds": [267], "tags": ["distractor"]}
+{"id": "C268-1", "knowledgeBaseId": 2, "question": "What happens when the two footmen bow low?", "answerable": true, "expectedChunkIds": [268], "tags": ["exact"]}
+{"id": "C268-2", "knowledgeBaseId": 2, "question": "What accidental tangle makes Alice laugh outside the house?", "answerable": true, "expectedChunkIds": [268], "tags": ["semantic"]}
+{"id": "C268-3", "knowledgeBaseId": 2, "question": "两个仆人鞠躬时发生了什么，让爱丽丝发笑？", "answerable": true, "expectedChunkIds": [268], "tags": ["chinese_synonym"]}
+{"id": "C268-4", "knowledgeBaseId": 2, "question": "Which scene entangles footmen's curls rather than the tea party's cups?", "answerable": true, "expectedChunkIds": [268], "tags": ["distractor"]}
+{"id": "C269-1", "knowledgeBaseId": 2, "question": "Which animal does the Duchess say can grin?", "answerable": true, "expectedChunkIds": [269], "tags": ["exact"]}
+{"id": "C269-2", "knowledgeBaseId": 2, "question": "What surprising ability of Cheshire cats does Alice discuss with the Duchess?", "answerable": true, "expectedChunkIds": [269], "tags": ["semantic"]}
+{"id": "C269-3", "knowledgeBaseId": 2, "question": "公爵夫人说哪种猫都会咧嘴笑？", "answerable": true, "expectedChunkIds": [269], "tags": ["chinese_synonym"]}
+{"id": "C269-4", "knowledgeBaseId": 2, "question": "Which grin belongs to a Cheshire cat rather than the animal in Alice's fish poem?", "answerable": true, "expectedChunkIds": [269], "tags": ["distractor"]}
+{"id": "C270-1", "knowledgeBaseId": 2, "question": "What does Alice compare the baby's spread limbs to?", "answerable": true, "expectedChunkIds": [270], "tags": ["exact"]}
+{"id": "C270-2", "knowledgeBaseId": 2, "question": "Which sea creature provides Alice's comparison for the baby she catches?", "answerable": true, "expectedChunkIds": [270], "tags": ["semantic"]}
+{"id": "C270-3", "knowledgeBaseId": 2, "question": "爱丽丝把婴儿向四周伸展的手脚比作什么？", "answerable": true, "expectedChunkIds": [270], "tags": ["chinese_synonym"]}
+{"id": "C270-4", "knowledgeBaseId": 2, "question": "Which baby scene uses a starfish comparison rather than the Pigeon's snake accusation?", "answerable": true, "expectedChunkIds": [270], "tags": ["distractor"]}
+{"id": "C271-1", "knowledgeBaseId": 2, "question": "Which two people does the Cat say live in opposite directions?", "answerable": true, "expectedChunkIds": [271], "tags": ["exact"]}
+{"id": "C271-2", "knowledgeBaseId": 2, "question": "Who can Alice visit after the Cat waves each paw toward a different home?", "answerable": true, "expectedChunkIds": [271], "tags": ["semantic"]}
+{"id": "C271-3", "knowledgeBaseId": 2, "question": "柴郡猫指向两个方向，说那里分别住着谁？", "answerable": true, "expectedChunkIds": [271], "tags": ["chinese_synonym"]}
+{"id": "C271-4", "knowledgeBaseId": 2, "question": "Which directions concern the Hatter and March Hare rather than the two sides of a mushroom?", "answerable": true, "expectedChunkIds": [271], "tags": ["distractor"]}
+{"id": "C272-1", "knowledgeBaseId": 2, "question": "Who sleeps between the Hatter and March Hare at tea?", "answerable": true, "expectedChunkIds": [272], "tags": ["exact"]}
+{"id": "C272-2", "knowledgeBaseId": 2, "question": "Which drowsy guest is used as a cushion at the outdoor tea table?", "answerable": true, "expectedChunkIds": [272], "tags": ["semantic"]}
+{"id": "C272-3", "knowledgeBaseId": 2, "question": "帽匠和三月兔茶桌之间睡着谁，还被当成靠垫？", "answerable": true, "expectedChunkIds": [272], "tags": ["chinese_synonym"]}
+{"id": "C272-4", "knowledgeBaseId": 2, "question": "Which tea-party guest is a Dormouse rather than the Mouse in the pool?", "answerable": true, "expectedChunkIds": [272], "tags": ["distractor"]}
+{"id": "C273-1", "knowledgeBaseId": 2, "question": "What does the March Hare dip into a cup of tea?", "answerable": true, "expectedChunkIds": [273], "tags": ["exact"]}
+{"id": "C273-2", "knowledgeBaseId": 2, "question": "Which timepiece is put into tea after a discussion of butter?", "answerable": true, "expectedChunkIds": [273], "tags": ["semantic"]}
+{"id": "C273-3", "knowledgeBaseId": 2, "question": "三月兔把什么东西浸进茶杯？", "answerable": true, "expectedChunkIds": [273], "tags": ["chinese_synonym"]}
+{"id": "C273-4", "knowledgeBaseId": 2, "question": "Which tea-party passage concerns a watch rather than moving to a clean cup?", "answerable": true, "expectedChunkIds": [273], "tags": ["distractor"]}
+{"id": "C274-1", "knowledgeBaseId": 2, "question": "What time is it always according to the Hatter?", "answerable": true, "expectedChunkIds": [274], "tags": ["exact"]}
+{"id": "C274-2", "knowledgeBaseId": 2, "question": "Why do tea things remain laid out at the Hatter's table?", "answerable": true, "expectedChunkIds": [274], "tags": ["semantic"]}
+{"id": "C274-3", "knowledgeBaseId": 2, "question": "帽匠说时间永远停在几点，所以茶具一直摆着？", "answerable": true, "expectedChunkIds": [274], "tags": ["chinese_synonym"]}
+{"id": "C274-4", "knowledgeBaseId": 2, "question": "Which tea-party problem fixes the clock at six rather than damaging a watch with butter?", "answerable": true, "expectedChunkIds": [274], "tags": ["distractor"]}
+{"id": "C275-1", "knowledgeBaseId": 2, "question": "Who says 'I want a clean cup' and proposes moving one place?", "answerable": true, "expectedChunkIds": [275], "tags": ["exact"]}
+{"id": "C275-2", "knowledgeBaseId": 2, "question": "Which tea guest starts the seat-shifting to obtain a fresh cup?", "answerable": true, "expectedChunkIds": [275], "tags": ["semantic"]}
+{"id": "C275-3", "knowledgeBaseId": 2, "question": "谁想要干净的杯子，于是提议大家换一个座位？", "answerable": true, "expectedChunkIds": [275], "tags": ["chinese_synonym"]}
+{"id": "C275-4", "knowledgeBaseId": 2, "question": "Which tea-party scene changes places rather than leaving time at six o'clock?", "answerable": true, "expectedChunkIds": [275], "tags": ["distractor"]}
+{"id": "C55-1", "knowledgeBaseId": 2, "question": "Who urges Mr. Bennet to visit the new neighbor for his daughters?", "answerable": true, "expectedChunkIds": [55], "tags": ["exact"]}
+{"id": "C55-2", "knowledgeBaseId": 2, "question": "Why does Mrs. Bennet press her husband to meet Mr. Bingley?", "answerable": true, "expectedChunkIds": [55], "tags": ["semantic"]}
+{"id": "C55-3", "knowledgeBaseId": 2, "question": "班纳特太太为了女儿们，催丈夫拜访哪位新邻居？", "answerable": true, "expectedChunkIds": [55], "tags": ["chinese_synonym"]}
+{"id": "C55-4", "knowledgeBaseId": 2, "question": "Which Bingley introduction is urged by Mrs. Bennet rather than arranged by Mrs. Long?", "answerable": true, "expectedChunkIds": [55], "tags": ["distractor"]}
+{"id": "C56-1", "knowledgeBaseId": 2, "question": "When is Mrs. Long expected back relative to the introduction?", "answerable": true, "expectedChunkIds": [56], "tags": ["exact"]}
+{"id": "C56-2", "knowledgeBaseId": 2, "question": "Why cannot Mrs. Long introduce Bingley before returning?", "answerable": true, "expectedChunkIds": [56], "tags": ["semantic"]}
+{"id": "C56-3", "knowledgeBaseId": 2, "question": "朗太太回来得太晚，为什么无法先介绍彬格莱先生？", "answerable": true, "expectedChunkIds": [56], "tags": ["chinese_synonym"]}
+{"id": "C56-4", "knowledgeBaseId": 2, "question": "Which passage discusses Mrs. Long's return rather than Mr. Bennet's secret visit?", "answerable": true, "expectedChunkIds": [56], "tags": ["distractor"]}
+{"id": "C57-1", "knowledgeBaseId": 2, "question": "How do Mrs. Bennet and her five daughters seek a description of Bingley?", "answerable": true, "expectedChunkIds": [57], "tags": ["exact"]}
+{"id": "C57-2", "knowledgeBaseId": 2, "question": "Who evades the family's repeated questions about the new gentleman?", "answerable": true, "expectedChunkIds": [57], "tags": ["semantic"]}
+{"id": "C57-3", "knowledgeBaseId": 2, "question": "班纳特太太和五个女儿问彬格莱的情况，谁一直不肯描述？", "answerable": true, "expectedChunkIds": [57], "tags": ["chinese_synonym"]}
+{"id": "C57-4", "knowledgeBaseId": 2, "question": "Which family interrogation concerns Bingley rather than Darcy's ballroom manners?", "answerable": true, "expectedChunkIds": [57], "tags": ["distractor"]}
+{"id": "C58-1", "knowledgeBaseId": 2, "question": "What annual income is rumored for the gentleman at the ball?", "answerable": true, "expectedChunkIds": [58], "tags": ["exact"]}
+{"id": "C58-2", "knowledgeBaseId": 2, "question": "What fortune is attributed to Darcy shortly after he enters the assembly?", "answerable": true, "expectedChunkIds": [58], "tags": ["semantic"]}
+{"id": "C58-3", "knowledgeBaseId": 2, "question": "舞会上那位先生入场不久，众人传说他年收入多少？", "answerable": true, "expectedChunkIds": [58], "tags": ["chinese_synonym"]}
+{"id": "C58-4", "knowledgeBaseId": 2, "question": "Which ball rumor concerns ten thousand a year rather than Bingley's two dances with Jane?", "answerable": true, "expectedChunkIds": [58], "tags": ["distractor"]}
+{"id": "C59-1", "knowledgeBaseId": 2, "question": "How does Elizabeth respond after Darcy walks off?", "answerable": true, "expectedChunkIds": [59], "tags": ["exact"]}
+{"id": "C59-2", "knowledgeBaseId": 2, "question": "What does Elizabeth do with the slight at the evening gathering?", "answerable": true, "expectedChunkIds": [59], "tags": ["semantic"]}
+{"id": "C59-3", "knowledgeBaseId": 2, "question": "达西走开后，伊丽莎白怎样向朋友讲述这件事？", "answerable": true, "expectedChunkIds": [59], "tags": ["chinese_synonym"]}
+{"id": "C59-4", "knowledgeBaseId": 2, "question": "Which passage has Elizabeth telling the Darcy incident playfully rather than refusing his later dance?", "answerable": true, "expectedChunkIds": [59], "tags": ["distractor"]}
+{"id": "C60-1", "knowledgeBaseId": 2, "question": "Who is flattered to be asked for a second dance?", "answerable": true, "expectedChunkIds": [60], "tags": ["exact"]}
+{"id": "C60-2", "knowledgeBaseId": 2, "question": "What compliment surprises Jane in the post-ball conversation?", "answerable": true, "expectedChunkIds": [60], "tags": ["semantic"]}
+{"id": "C60-3", "knowledgeBaseId": 2, "question": "舞会后谁因第二次被邀跳舞而感到受宠若惊？", "answerable": true, "expectedChunkIds": [60], "tags": ["chinese_synonym"]}
+{"id": "C60-4", "knowledgeBaseId": 2, "question": "Which dance conversation concerns Jane's second invitation rather than Elizabeth declining Darcy?", "answerable": true, "expectedChunkIds": [60], "tags": ["distractor"]}
+{"id": "C61-1", "knowledgeBaseId": 2, "question": "Which house does Bingley inspect after an accidental recommendation?", "answerable": true, "expectedChunkIds": [61], "tags": ["exact"]}
+{"id": "C61-2", "knowledgeBaseId": 2, "question": "What estate catches Bingley's attention while he is still a young tenant?", "answerable": true, "expectedChunkIds": [61], "tags": ["semantic"]}
+{"id": "C61-3", "knowledgeBaseId": 2, "question": "彬格莱偶然得到推荐后去看哪座房子？", "answerable": true, "expectedChunkIds": [61], "tags": ["chinese_synonym"]}
+{"id": "C61-4", "knowledgeBaseId": 2, "question": "Which residence is Netherfield House rather than Longbourn or Pemberley?", "answerable": true, "expectedChunkIds": [61], "tags": ["distractor"]}
+{"id": "C62-1", "knowledgeBaseId": 2, "question": "With whom did Bingley dance twice at the assembly?", "answerable": true, "expectedChunkIds": [62], "tags": ["exact"]}
+{"id": "C62-2", "knowledgeBaseId": 2, "question": "What repeated dance leads observers to think Bingley admires Jane?", "answerable": true, "expectedChunkIds": [62], "tags": ["semantic"]}
+{"id": "C62-3", "knowledgeBaseId": 2, "question": "众人认为彬格莱欣赏简，是因为他与她跳了几次舞？", "answerable": true, "expectedChunkIds": [62], "tags": ["chinese_synonym"]}
+{"id": "C62-4", "knowledgeBaseId": 2, "question": "Which passage identifies Jane as Bingley's twice-chosen partner rather than Elizabeth as Darcy's partner?", "answerable": true, "expectedChunkIds": [62], "tags": ["distractor"]}
+{"id": "C64-1", "knowledgeBaseId": 2, "question": "How many evenings together are cited as evidence of acquaintance?", "answerable": true, "expectedChunkIds": [64], "tags": ["exact"]}
+{"id": "C64-2", "knowledgeBaseId": 2, "question": "Why does the speaker say a mere dinner would reveal only an appetite?", "answerable": true, "expectedChunkIds": [64], "tags": ["semantic"]}
+{"id": "C64-3", "knowledgeBaseId": 2, "question": "除了共进晚餐，他们还一起度过了几个晚上？", "answerable": true, "expectedChunkIds": [64], "tags": ["chinese_synonym"]}
+{"id": "C64-4", "knowledgeBaseId": 2, "question": "Which courtship discussion contrasts four evenings with one dinner rather than two dances?", "answerable": true, "expectedChunkIds": [64], "tags": ["distractor"]}
+{"id": "C65-1", "knowledgeBaseId": 2, "question": "Who wants Eliza to play and sing before the company?", "answerable": true, "expectedChunkIds": [65], "tags": ["exact"]}
+{"id": "C65-2", "knowledgeBaseId": 2, "question": "Which friend opens the instrument to tease Elizabeth into performing?", "answerable": true, "expectedChunkIds": [65], "tags": ["semantic"]}
+{"id": "C65-3", "knowledgeBaseId": 2, "question": "是谁打开乐器，想让伊丽莎白在人前演奏歌唱？", "answerable": true, "expectedChunkIds": [65], "tags": ["chinese_synonym"]}
+{"id": "C65-4", "knowledgeBaseId": 2, "question": "Which musical pressure comes from Miss Lucas rather than Darcy's request for a dance?", "answerable": true, "expectedChunkIds": [65], "tags": ["distractor"]}
+{"id": "C66-1", "knowledgeBaseId": 2, "question": "Whose request to dance does Elizabeth refuse?", "answerable": true, "expectedChunkIds": [66], "tags": ["exact"]}
+{"id": "C66-2", "knowledgeBaseId": 2, "question": "Which gentleman's invitation cannot sway Elizabeth even with Sir William's persuasion?", "answerable": true, "expectedChunkIds": [66], "tags": ["semantic"]}
+{"id": "C66-3", "knowledgeBaseId": 2, "question": "伊丽莎白拒绝了哪位先生的跳舞邀请？", "answerable": true, "expectedChunkIds": [66], "tags": ["chinese_synonym"]}
+{"id": "C66-4", "knowledgeBaseId": 2, "question": "Which dance refusal targets Darcy rather than Bingley's second dance with Jane?", "answerable": true, "expectedChunkIds": [66], "tags": ["distractor"]}
+{"id": "C67-1", "knowledgeBaseId": 2, "question": "Which two younger Bennet sisters frequently walk to Meryton?", "answerable": true, "expectedChunkIds": [67], "tags": ["exact"]}
+{"id": "C67-2", "knowledgeBaseId": 2, "question": "Who use trips into town to enliven otherwise empty mornings?", "answerable": true, "expectedChunkIds": [67], "tags": ["semantic"]}
+{"id": "C67-3", "knowledgeBaseId": 2, "question": "班纳特家哪两个小女儿常到梅里屯散步？", "answerable": true, "expectedChunkIds": [67], "tags": ["chinese_synonym"]}
+{"id": "C67-4", "knowledgeBaseId": 2, "question": "Which Meryton walkers are Catherine and Lydia rather than Jane and Elizabeth?", "answerable": true, "expectedChunkIds": [67], "tags": ["distractor"]}
+{"id": "C68-1", "knowledgeBaseId": 2, "question": "Why does Mrs. Bennet advise Jane to travel on horseback?", "answerable": true, "expectedChunkIds": [68], "tags": ["exact"]}
+{"id": "C68-2", "knowledgeBaseId": 2, "question": "What weather does Jane's mother hope will force an overnight stay?", "answerable": true, "expectedChunkIds": [68], "tags": ["semantic"]}
+{"id": "C68-3", "knowledgeBaseId": 2, "question": "班纳特太太为何让简骑马，而不是坐马车出门？", "answerable": true, "expectedChunkIds": [68], "tags": ["chinese_synonym"]}
+{"id": "C68-4", "knowledgeBaseId": 2, "question": "Which travel plan uses expected rain rather than Elizabeth's later walk across fields?", "answerable": true, "expectedChunkIds": [68], "tags": ["distractor"]}
+{"id": "C69-1", "knowledgeBaseId": 2, "question": "Whom does Lydia hope to see before he goes?", "answerable": true, "expectedChunkIds": [69], "tags": ["exact"]}
+{"id": "C69-2", "knowledgeBaseId": 2, "question": "Which officer is mentioned before Elizabeth crosses fields alone?", "answerable": true, "expectedChunkIds": [69], "tags": ["semantic"]}
+{"id": "C69-3", "knowledgeBaseId": 2, "question": "莉迪亚赶路时希望在离开前见到哪位军官？", "answerable": true, "expectedChunkIds": [69], "tags": ["chinese_synonym"]}
+{"id": "C69-4", "knowledgeBaseId": 2, "question": "Which Meryton errand mentions Captain Carter rather than Jane's rainy ride?", "answerable": true, "expectedChunkIds": [69], "tags": ["distractor"]}
+{"id": "C70-1", "knowledgeBaseId": 2, "question": "Who shows particular concern when Elizabeth reports on Jane at dinner?", "answerable": true, "expectedChunkIds": [70], "tags": ["exact"]}
+{"id": "C70-2", "knowledgeBaseId": 2, "question": "Which gentleman's solicitude for Jane stands out among dinner inquiries?", "answerable": true, "expectedChunkIds": [70], "tags": ["semantic"]}
+{"id": "C70-3", "knowledgeBaseId": 2, "question": "伊丽莎白晚餐时汇报简的病情，谁的关切特别真诚？", "answerable": true, "expectedChunkIds": [70], "tags": ["chinese_synonym"]}
+{"id": "C70-4", "knowledgeBaseId": 2, "question": "Which inquiry comes from Bingley rather than his sisters' repeated polite regrets?", "answerable": true, "expectedChunkIds": [70], "tags": ["distractor"]}
+{"id": "C71-1", "knowledgeBaseId": 2, "question": "What do Bingley's sisters mock after he remains silent?", "answerable": true, "expectedChunkIds": [71], "tags": ["exact"]}
+{"id": "C71-2", "knowledgeBaseId": 2, "question": "Whose family connections become the sisters' joke before they visit the sick friend?", "answerable": true, "expectedChunkIds": [71], "tags": ["semantic"]}
+{"id": "C71-3", "knowledgeBaseId": 2, "question": "彬格莱的姐妹们取笑她们朋友哪一方面的亲戚？", "answerable": true, "expectedChunkIds": [71], "tags": ["chinese_synonym"]}
+{"id": "C71-4", "knowledgeBaseId": 2, "question": "Which passage mocks vulgar relations rather than measuring a young lady's accomplishments?", "answerable": true, "expectedChunkIds": [71], "tags": ["distractor"]}
+{"id": "C72-1", "knowledgeBaseId": 2, "question": "Which three activities are called common accomplishments?", "answerable": true, "expectedChunkIds": [72], "tags": ["exact"]}
+{"id": "C72-2", "knowledgeBaseId": 2, "question": "What examples are given before Darcy argues that 'accomplished' is overused?", "answerable": true, "expectedChunkIds": [72], "tags": ["semantic"]}
+{"id": "C72-3", "knowledgeBaseId": 2, "question": "谈到女子才艺时，文中列举了画桌子、装饰屏风和什么？", "answerable": true, "expectedChunkIds": [72], "tags": ["chinese_synonym"]}
+{"id": "C72-4", "knowledgeBaseId": 2, "question": "Which passage lists netting purses rather than playing the harp?", "answerable": true, "expectedChunkIds": [72], "tags": ["distractor"]}
+{"id": "C73-1", "knowledgeBaseId": 2, "question": "Where does Elizabeth spend most of the night while Jane is ill?", "answerable": true, "expectedChunkIds": [73], "tags": ["exact"]}
+{"id": "C73-2", "knowledgeBaseId": 2, "question": "What does Elizabeth do overnight before Bingley sends an early inquiry?", "answerable": true, "expectedChunkIds": [73], "tags": ["semantic"]}
+{"id": "C73-3", "knowledgeBaseId": 2, "question": "简生病时，伊丽莎白主要在哪里过夜？", "answerable": true, "expectedChunkIds": [73], "tags": ["chinese_synonym"]}
+{"id": "C73-4", "knowledgeBaseId": 2, "question": "Which passage has Elizabeth staying with her sister rather than walking through fields to reach her?", "answerable": true, "expectedChunkIds": [73], "tags": ["distractor"]}
+{"id": "C74-1", "knowledgeBaseId": 2, "question": "What comparison does Mrs. Bennet make between country and town?", "answerable": true, "expectedChunkIds": [74], "tags": ["exact"]}
+{"id": "C74-2", "knowledgeBaseId": 2, "question": "How does Mrs. Bennet answer Darcy's slight about a country neighborhood?", "answerable": true, "expectedChunkIds": [74], "tags": ["semantic"]}
+{"id": "C74-3", "knowledgeBaseId": 2, "question": "班纳特太太怎样反驳达西对乡下社交的轻视？", "answerable": true, "expectedChunkIds": [74], "tags": ["chinese_synonym"]}
+{"id": "C74-4", "knowledgeBaseId": 2, "question": "Which argument defends country society rather than discussing Bingley's estate?", "answerable": true, "expectedChunkIds": [74], "tags": ["distractor"]}
+{"id": "C75-1", "knowledgeBaseId": 2, "question": "What does the speaker say one good sonnet can do to a thin inclination?", "answerable": true, "expectedChunkIds": [75], "tags": ["exact"]}
+{"id": "C75-2", "knowledgeBaseId": 2, "question": "How might poetry affect a weak romantic attachment in this conversation?", "answerable": true, "expectedChunkIds": [75], "tags": ["semantic"]}
+{"id": "C75-3", "knowledgeBaseId": 2, "question": "说话者认为一首好十四行诗会怎样影响微弱的爱慕？", "answerable": true, "expectedChunkIds": [75], "tags": ["chinese_synonym"]}
+{"id": "C75-4", "knowledgeBaseId": 2, "question": "Which statement says a sonnet can starve weak love rather than nourish strong love?", "answerable": true, "expectedChunkIds": [75], "tags": ["distractor"]}
+{"id": "X01", "knowledgeBaseId": 2, "question": "How does Alice use the glass-table discovery before hoping to enter the garden?", "answerable": true, "expectedChunkIds": [252, 253], "tags": ["cross_context"]}
+{"id": "X02", "knowledgeBaseId": 2, "question": "How do Alice's two size problems differ between the hall and the Caterpillar conversation?", "answerable": true, "expectedChunkIds": [254, 265], "tags": ["cross_context"]}
+{"id": "X03", "knowledgeBaseId": 2, "question": "What do the Dodo and the Mouse each contribute after the pool episode?", "answerable": true, "expectedChunkIds": [258, 259], "tags": ["cross_context"]}
+{"id": "X04", "knowledgeBaseId": 2, "question": "Who does the Cat point Alice toward, and who is asleep at their tea table?", "answerable": true, "expectedChunkIds": [271, 272], "tags": ["cross_context"]}
+{"id": "X05", "knowledgeBaseId": 2, "question": "How do the damaged watch and the permanent six o'clock tea relate?", "answerable": true, "expectedChunkIds": [273, 274], "tags": ["cross_context"]}
+{"id": "X06", "knowledgeBaseId": 2, "question": "Why do Mr. Bennet's visit and Mrs. Long's return matter to introducing Bingley?", "answerable": true, "expectedChunkIds": [55, 56], "tags": ["cross_context"]}
+{"id": "X07", "knowledgeBaseId": 2, "question": "How does the family's search for information about Bingley differ from the ballroom rumor about Darcy?", "answerable": true, "expectedChunkIds": [57, 58], "tags": ["cross_context"]}
+{"id": "X08", "knowledgeBaseId": 2, "question": "How does Elizabeth resist both a request to perform music and a request to dance?", "answerable": true, "expectedChunkIds": [65, 66], "tags": ["cross_context"]}
+{"id": "X09", "knowledgeBaseId": 2, "question": "Contrast Jane's rain-related journey with Elizabeth's later walk across fields.", "answerable": true, "expectedChunkIds": [68, 69], "tags": ["cross_context"]}
+{"id": "X10", "knowledgeBaseId": 2, "question": "How do Bingley's concern for Jane and his sisters' jokes about her family appear together?", "answerable": true, "expectedChunkIds": [70, 71], "tags": ["cross_context"]}
+{"id": "N01", "knowledgeBaseId": 2, "question": "What is Alice's email address in the story?", "answerable": false, "expectedChunkIds": [], "tags": ["unanswerable"]}
+{"id": "N02", "knowledgeBaseId": 2, "question": "Which Qdrant collection does the White Rabbit administer?", "answerable": false, "expectedChunkIds": [], "tags": ["unanswerable"]}
+{"id": "N03", "knowledgeBaseId": 2, "question": "What is Mr. Darcy's mobile phone number?", "answerable": false, "expectedChunkIds": [], "tags": ["unanswerable"]}
+{"id": "N04", "knowledgeBaseId": 2, "question": "Which astronaut visits Netherfield House?", "answerable": false, "expectedChunkIds": [], "tags": ["unanswerable"]}
+{"id": "N05", "knowledgeBaseId": 2, "question": "What SQL error code does the Hatter receive at tea?", "answerable": false, "expectedChunkIds": [], "tags": ["unanswerable"]}
+{"id": "N06", "knowledgeBaseId": 2, "question": "Which train does Jane take to Netherfield?", "answerable": false, "expectedChunkIds": [], "tags": ["unanswerable"]}
+{"id": "N07", "knowledgeBaseId": 2, "question": "What is the ISBN of the glass table in Alice's hall?", "answerable": false, "expectedChunkIds": [], "tags": ["unanswerable"]}
+{"id": "N08", "knowledgeBaseId": 2, "question": "Which cloud region hosts the Duchess's palace?", "answerable": false, "expectedChunkIds": [], "tags": ["unanswerable"]}
+{"id": "N09", "knowledgeBaseId": 2, "question": "How many Git commits did Elizabeth make at the ball?", "answerable": false, "expectedChunkIds": [], "tags": ["unanswerable"]}
+{"id": "N10", "knowledgeBaseId": 2, "question": "What is Lydia's credit-card expiry date?", "answerable": false, "expectedChunkIds": [], "tags": ["unanswerable"]}

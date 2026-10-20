@@ -1,0 +1,38 @@
+# Each run gets a fresh project, database and Redis. Never restart the repository's shared services.
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: ${M19D_MYSQL_ROOT_PASSWORD:?M19D_MYSQL_ROOT_PASSWORD is required}
+      MYSQL_DATABASE: ai_document_agent_m19d
+      MYSQL_USER: m19d
+      MYSQL_PASSWORD: ${M19D_DB_PASSWORD:?M19D_DB_PASSWORD is required}
+    ports:
+      - "127.0.0.1:${M19D_MYSQL_PORT:-13307}:3306"
+    volumes:
+      - recovery_mysql:/var/lib/mysql
+    labels:
+      benchmark.module: M19D
+      benchmark.run-id: ${M19D_RUN_ID:?M19D_RUN_ID is required}
+    healthcheck:
+      test: ["CMD-SHELL", 'MYSQL_PWD="$$MYSQL_PASSWORD" mysql --protocol=TCP -h 127.0.0.1 -u"$$MYSQL_USER" "$$MYSQL_DATABASE" -e "SELECT 1" >/dev/null']
+      interval: 2s
+      timeout: 5s
+      retries: 60
+  redis:
+    image: redis:8-alpine
+    environment:
+      M19D_REDIS_PASSWORD: ${M19D_REDIS_PASSWORD:?M19D_REDIS_PASSWORD is required}
+    command: ["sh", "-c", 'exec redis-server --save "" --appendonly no --requirepass "$$M19D_REDIS_PASSWORD"']
+    ports:
+      - "127.0.0.1:${M19D_REDIS_PORT:-16380}:6379"
+    labels:
+      benchmark.module: M19D
+      benchmark.run-id: ${M19D_RUN_ID:?M19D_RUN_ID is required}
+    healthcheck:
+      test: ["CMD-SHELL", 'REDISCLI_AUTH="$$M19D_REDIS_PASSWORD" redis-cli ping | grep -q PONG']
+      interval: 1s
+      timeout: 3s
+      retries: 30
+volumes:
+  recovery_mysql:

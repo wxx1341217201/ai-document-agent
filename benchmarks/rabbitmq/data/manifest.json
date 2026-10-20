@@ -1,0 +1,710 @@
+{
+  "chunkSizeCharacters" : 512,
+  "documents" : [ {
+    "file" : "doc-000.txt",
+    "id" : "doc-000",
+    "longDocument" : true,
+    "bytes" : 102400,
+    "expectedChunks" : 200,
+    "sha256" : "b0d5239f8552542e700d56c8016f93429834ae2e9438c1cb0521a0776c2199bc"
+  }, {
+    "file" : "doc-001.txt",
+    "id" : "doc-001",
+    "longDocument" : false,
+    "bytes" : 10240,
+    "expectedChunks" : 20,
+    "sha256" : "7c15929f0e7807fabe389f8e4346e6896e1eb51783ab90c68c951be5e6581934"
+  }, {
+    "file" : "doc-002.txt",
+    "id" : "doc-002",
+    "longDocument" : true,
+    "bytes" : 102400,
+    "expectedChunks" : 200,
+    "sha256" : "2b4d5ea061056525db98a0ec0dd0603ef96270d5348641d8a57d1eec86fedcf6"
+  }, {
+    "file" : "doc-003.txt",
+    "id" : "doc-003",
+    "longDocument" : false,
+    "bytes" : 10240,
+    "expectedChunks" : 20,
+    "sha256" : "0995f953159b29415af4fecca79948f9447726b7f300f9b202b82b3c9563a384"
+  }, {
+    "file" : "doc-004.txt",
+    "id" : "doc-004",
+    "longDocument" : true,
+    "bytes" : 102400,
+    "expectedChunks" : 200,
+    "sha256" : "ba9c7473a8426886418ad24fd8ebc1815584eb59fd5b5e3785b440fbb9d7961d"
+  }, {
+    "file" : "doc-005.txt",
+    "id" : "doc-005",
+    "longDocument" : false,
+    "bytes" : 10240,
+    "expectedChunks" : 20,
+    "sha256" : "3644c631cb73bb5b5fa47030d63d6b7600fac5a3f56185f3bb040a546d7a971a"
+  }, {
+    "file" : "doc-006.txt",
+    "id" : "doc-006",
+    "longDocument" : true,
+    "bytes" : 102400,
+    "expectedChunks" : 200,
+    "sha256" : "fd26d6d5276c40605357d1841d8b06b1946010c7d28294a52071836a07be84ab"
+  }, {
+    "file" : "doc-007.txt",
+    "id" : "doc-007",
+    "longDocument" : false,
+    "bytes" : 10240,
+    "expectedChunks" : 20,
+    "sha256" : "3e8119e6c23a1e1376892c502c969458da0a9e5b39ab7196d6e4a66dfb57217b"
+  }, {
+    "file" : "doc-008.txt",
+    "id" : "doc-008",
+    "longDocument" : true,
+    "bytes" : 102400,
+    "expectedChunks" : 200,
+    "sha256" : "9527c8059ff09e45f13fe9049f16e1b47926edd395ca675ce35573d9ecd5d87a"
+  }, {
+    "file" : "doc-009.txt",
+    "id" : "doc-009",
+    "longDocument" : false,
+    "bytes" : 10240,
+    "expectedChunks" : 20,
+    "sha256" : "60be75e0b13bee3b343a08cbd7668f65a4e70cd18a5e34abd2781add16a69f8f"
+  }, {
+    "file" : "doc-010.txt",
+    "id" : "doc-010",
+    "longDocument" : true,
+    "bytes" : 102400,
+    "expectedChunks" : 200,
+    "sha256" : "8ee2e86063460f6fad90eace6130ba1604e61f7e6b2a86f6bb7b7c7fa15769d3"
+  }, {
+    "file" : "doc-011.txt",
+    "id" : "doc-011",
+    "longDocument" : false,
+    "bytes" : 10240,
+    "expectedChunks" : 20,
+    "sha256" : "cd7998034bc8814c6cca4f15a85c32a8946cb68b62d6b275581a51d1bb0df2ff"
+  }, {
+    "file" : "doc-012.txt",
+    "id" : "doc-012",
+    "longDocument" : true,
+    "bytes" : 102400,
+    "expectedChunks" : 200,
+    "sha256" : "28e119e40190756711f7d7f13f794747651ca0c96f4505b670ebfd193c6ab806"
+  }, {
+    "file" : "doc-013.txt",
+    "id" : "doc-013",
+    "longDocument" : false,
+    "bytes" : 10240,
+    "expectedChunks" : 20,
+    "sha256" : "3568d27bbf0803aba84cd03bbc40a80b478f168b303d3e5f859d630cca0da6f9"
+  }, {
+    "file" : "doc-014.txt",
+    "id" : "doc-014",
+    "longDocument" : true,
+    "bytes" : 102400,
+    "expectedChunks" : 200,
+    "sha256" : "0cd8da5b3599e1fc2c3b7b2a740010cf02451a014324f8297266c67605195495"
+  }, {
+    "file" : "doc-015.txt",
+    "id" : "doc-015",
+    "longDocument" : false,
+    "bytes" : 10240,
+    "expectedChunks" : 20,
+    "sha256" : "09b84cf38a418695b4f61efa537517abaa798ec2540c323b610cc2a0cc5351d2"
+  }, {
+    "file" : "doc-016.txt",
+    "id" : "doc-016",
+    "longDocument" : true,
+    "bytes" : 102400,
+    "expectedChunks" : 200,
+    "sha256" : "c77e47309d1dd24105ed48fc1f75e0a1370086af4a59efc1bdf931cab9fc8110"
+  }, {
+    "file" : "doc-017.txt",
+    "id" : "doc-017",
+    "longDocument" : false,
+    "bytes" : 10240,
+    "expectedChunks" : 20,
+    "sha256" : "f27cec8b3cfccb9cad0213497f01473cca9d176d7cb75d8c6fc976bcba1fe252"
+  }, {
+    "file" : "doc-018.txt",
+    "id" : "doc-018",
+    "longDocument" : true,
+    "bytes" : 102400,
+    "expectedChunks" : 200,
+    "sha256" : "7c84bc15d77a949c6b2c2a7ad50bb41fd65a3af85604c93c7a6a171c25ca4023"
+  }, {
+    "file" : "doc-019.txt",
+    "id" : "doc-019",
+    "longDocument" : false,
+    "bytes" : 10240,
+    "expectedChunks" : 20,
+    "sha256" : "75501198075b99ef9bba44a87c5e6c07bb4a554af304089da85e26da493776f2"
+  }, {
+    "file" : "doc-020.txt",
+    "id" : "doc-020",
+    "longDocument" : true,
+    "bytes" : 102400,
+    "expectedChunks" : 200,
+    "sha256" : "28b875fe91ac1845cde2df19c54b7bfa32dc8269283588bdf095c7f8d5f6b3a3"
+  }, {
+    "file" : "doc-021.txt",
+    "id" : "doc-021",
+    "longDocument" : false,
+    "bytes" : 10240,
+    "expectedChunks" : 20,
+    "sha256" : "2a8da9cafd1230094adcbe1165ccc0efa2d1776562e7b232caf8bc57e7eb1126"
+  }, {
+    "file" : "doc-022.txt",
+    "id" : "doc-022",
+    "longDocument" : true,
+    "bytes" : 102400,
+    "expectedChunks" : 200,
+    "sha256" : "f8d332b3c51f23a1cf69aa77b5ab36d06c867fdbee9a182c1673857eb73e5729"
+  }, {
+    "file" : "doc-023.txt",
+    "id" : "doc-023",
+    "longDocument" : false,
+    "bytes" : 10240,
+    "expectedChunks" : 20,
+    "sha256" : "372b4ce030ce28c6d3fe25ef5b0a19ee5e2554ab4aee734a249191768913c02a"
+  }, {
+    "file" : "doc-024.txt",
+    "id" : "doc-024",
+    "longDocument" : true,
+    "bytes" : 102400,
+    "expectedChunks" : 200,
+    "sha256" : "18b198ce58954cbaeadd0266ee3f4ab84faf7079947c0b42d4590cf220178241"
+  }, {
+    "file" : "doc-025.txt",
+    "id" : "doc-025",
+    "longDocument" : false,
+    "bytes" : 10240,
+    "expectedChunks" : 20,
+    "sha256" : "a5aa83709a93c3b7b9c9cba605958474f01ca3a7c254479303851cb12ac78a76"
+  }, {
+    "file" : "doc-026.txt",
+    "id" : "doc-026",
+    "longDocument" : true,
+    "bytes" : 102400,
+    "expectedChunks" : 200,
+    "sha256" : "fb0f2ca4e99cd8b572244de919cca5089652142ab274c9c0b5ee9ee755bc3991"
+  }, {
+    "file" : "doc-027.txt",
+    "id" : "doc-027",
+    "longDocument" : false,
+    "bytes" : 10240,
+    "expectedChunks" : 20,
+    "sha256" : "f788ec6b1a131f93190da801e91bc6910ecc6b79719353103275d6d8fbca09f0"
+  }, {
+    "file" : "doc-028.txt",
+    "id" : "doc-028",
+    "longDocument" : true,
+    "bytes" : 102400,
+    "expectedChunks" : 200,
+    "sha256" : "2cb0e84c2bd41b3430f846cfd86b69da44fd31caac4e7064d41733f1586e2de4"
+  }, {
+    "file" : "doc-029.txt",
+    "id" : "doc-029",
+    "longDocument" : false,
+    "bytes" : 10240,
+    "expectedChunks" : 20,
+    "sha256" : "882c47a99984c0085ef3c50ea337c1acd1920fd80775732ca811185e8a9b8c03"
+  }, {
+    "file" : "doc-030.txt",
+    "id" : "doc-030",
+    "longDocument" : true,
+    "bytes" : 102400,
+    "expectedChunks" : 200,
+    "sha256" : "86277324b90c2f80e0383398c3b7523aa0f800e6c2be70d6bbf5999f9303200b"
+  }, {
+    "file" : "doc-031.txt",
+    "id" : "doc-031",
+    "longDocument" : false,
+    "bytes" : 10240,
+    "expectedChunks" : 20,
+    "sha256" : "3cd0e54e8f2674cece20ecb37b8ad647a7f43b22a46adfb0a9e738ade05e6fa5"
+  }, {
+    "file" : "doc-032.txt",
+    "id" : "doc-032",
+    "longDocument" : true,
+    "bytes" : 102400,
+    "expectedChunks" : 200,
+    "sha256" : "073ae669aa2220f4e95fc76b64d62642b67ceab961b41801aed20fab82c85e58"
+  }, {
+    "file" : "doc-033.txt",
+    "id" : "doc-033",
+    "longDocument" : false,
+    "bytes" : 10240,
+    "expectedChunks" : 20,
+    "sha256" : "57c1b170b1a2946a92a649e230cef198ac89dd46dbada41b30e69614c33e94e3"
+  }, {
+    "file" : "doc-034.txt",
+    "id" : "doc-034",
+    "longDocument" : true,
+    "bytes" : 102400,
+    "expectedChunks" : 200,
+    "sha256" : "efcaf46debd795ba019b1de3688eef97b2644a6d645f8057f715a2ef0cda4717"
+  }, {
+    "file" : "doc-035.txt",
+    "id" : "doc-035",
+    "longDocument" : false,
+    "bytes" : 10240,
+    "expectedChunks" : 20,
+    "sha256" : "722897e02050c6dda01c8ec8daf8448721554040e35c2b0411d054abc9806a84"
+  }, {
+    "file" : "doc-036.txt",
+    "id" : "doc-036",
+    "longDocument" : true,
+    "bytes" : 102400,
+    "expectedChunks" : 200,
+    "sha256" : "58e5037c7bed1043ebe7a94a24760e2af58f70dfead6bb13dfbfd1348202ae57"
+  }, {
+    "file" : "doc-037.txt",
+    "id" : "doc-037",
+    "longDocument" : false,
+    "bytes" : 10240,
+    "expectedChunks" : 20,
+    "sha256" : "25e83e934247fb5faee68698ef874be2b762d7e52c375553f1a582d90eae3ce9"
+  }, {
+    "file" : "doc-038.txt",
+    "id" : "doc-038",
+    "longDocument" : true,
+    "bytes" : 102400,
+    "expectedChunks" : 200,
+    "sha256" : "c7c8e52cf0aa9623c8cf541012242f02c0d77940393c7d7db4ef83110a7270a0"
+  }, {
+    "file" : "doc-039.txt",
+    "id" : "doc-039",
+    "longDocument" : false,
+    "bytes" : 10240,
+    "expectedChunks" : 20,
+    "sha256" : "1cc5b8aaf7afdb57a565b0a610180bfca60d78528e3df5f46df3f9a482a62754"
+  }, {
+    "file" : "doc-040.txt",
+    "id" : "doc-040",
+    "longDocument" : true,
+    "bytes" : 102400,
+    "expectedChunks" : 200,
+    "sha256" : "418d2f5f77de2a9092150d543b43160d59010b91894c5d6f208bbf1d4b89cb4c"
+  }, {
+    "file" : "doc-041.txt",
+    "id" : "doc-041",
+    "longDocument" : false,
+    "bytes" : 10240,
+    "expectedChunks" : 20,
+    "sha256" : "8c4aacf63021c243be25130c4bb7b7d5415821b5ad109ee709d684c815b495b8"
+  }, {
+    "file" : "doc-042.txt",
+    "id" : "doc-042",
+    "longDocument" : true,
+    "bytes" : 102400,
+    "expectedChunks" : 200,
+    "sha256" : "36aa56e59c6bca4f7c15116ac7b1c7f2278d7602d0c9dcdaa0f2fbf34bf90e40"
+  }, {
+    "file" : "doc-043.txt",
+    "id" : "doc-043",
+    "longDocument" : false,
+    "bytes" : 10240,
+    "expectedChunks" : 20,
+    "sha256" : "e8c491e0b1afe2b9ab84f7b319eefbfe2281f728fb126f956803c1d02f771dfc"
+  }, {
+    "file" : "doc-044.txt",
+    "id" : "doc-044",
+    "longDocument" : true,
+    "bytes" : 102400,
+    "expectedChunks" : 200,
+    "sha256" : "040a28b396d3c7dc78b7d34305fe38ae9589344ddeb300a8f05a3c6603e2bfed"
+  }, {
+    "file" : "doc-045.txt",
+    "id" : "doc-045",
+    "longDocument" : false,
+    "bytes" : 10240,
+    "expectedChunks" : 20,
+    "sha256" : "a5c280081b934f1cfd05f834be0d8bb08b19b1bb3238e41df906cea23d1e2ffc"
+  }, {
+    "file" : "doc-046.txt",
+    "id" : "doc-046",
+    "longDocument" : true,
+    "bytes" : 102400,
+    "expectedChunks" : 200,
+    "sha256" : "f2ccae33a5eccaffa64b9b9efb52c5b3a40a2e1ccc241237214c12873a77ff37"
+  }, {
+    "file" : "doc-047.txt",
+    "id" : "doc-047",
+    "longDocument" : false,
+    "bytes" : 10240,
+    "expectedChunks" : 20,
+    "sha256" : "7f6cbb057697b29f7b7b437580aeb012bbe4b397ef1809ceaf164fe3f18492ed"
+  }, {
+    "file" : "doc-048.txt",
+    "id" : "doc-048",
+    "longDocument" : true,
+    "bytes" : 102400,
+    "expectedChunks" : 200,
+    "sha256" : "f8a3a927f54b7d13ebd3d588c4152390a72c1ddeef1a599ba971afba2e8d9efe"
+  }, {
+    "file" : "doc-049.txt",
+    "id" : "doc-049",
+    "longDocument" : false,
+    "bytes" : 10240,
+    "expectedChunks" : 20,
+    "sha256" : "c650dc683f899c84d2752dc1d4485430c4999a78b966af2efbf869b3427bfe1a"
+  }, {
+    "file" : "doc-050.txt",
+    "id" : "doc-050",
+    "longDocument" : true,
+    "bytes" : 102400,
+    "expectedChunks" : 200,
+    "sha256" : "580808021bebeedac4e3989fa4d72a58a0e4598da53798a6ad8fc8f8cf11a3d8"
+  }, {
+    "file" : "doc-051.txt",
+    "id" : "doc-051",
+    "longDocument" : false,
+    "bytes" : 10240,
+    "expectedChunks" : 20,
+    "sha256" : "b601979f5a72c01a1030cfb8c0f542b7a72b61942604fe98689e360bed7d310d"
+  }, {
+    "file" : "doc-052.txt",
+    "id" : "doc-052",
+    "longDocument" : true,
+    "bytes" : 102400,
+    "expectedChunks" : 200,
+    "sha256" : "99b9d0d5d072bc525aee0dd5e99e53aa6620273cca49df7f5d9f52586721706a"
+  }, {
+    "file" : "doc-053.txt",
+    "id" : "doc-053",
+    "longDocument" : false,
+    "bytes" : 10240,
+    "expectedChunks" : 20,
+    "sha256" : "658803fdc03b2410d7c0497cf79c979451a8d273d69b7ed68942a46de9984a95"
+  }, {
+    "file" : "doc-054.txt",
+    "id" : "doc-054",
+    "longDocument" : true,
+    "bytes" : 102400,
+    "expectedChunks" : 200,
+    "sha256" : "5b23de04be3b1712bcd9a3883d675b357fcb15c8a39949af3a098350ad3cae6f"
+  }, {
+    "file" : "doc-055.txt",
+    "id" : "doc-055",
+    "longDocument" : false,
+    "bytes" : 10240,
+    "expectedChunks" : 20,
+    "sha256" : "184318c8a0afe8d9eb59594203bdfa461d37cc484b0ce19629a3da492d46e0e5"
+  }, {
+    "file" : "doc-056.txt",
+    "id" : "doc-056",
+    "longDocument" : true,
+    "bytes" : 102400,
+    "expectedChunks" : 200,
+    "sha256" : "51fa8b4219ca4171dd2c96713e55d0e5cbb2b3810193c26505cf40064f4b814a"
+  }, {
+    "file" : "doc-057.txt",
+    "id" : "doc-057",
+    "longDocument" : false,
+    "bytes" : 10240,
+    "expectedChunks" : 20,
+    "sha256" : "5c808d784fedd3c082e0712c0a06a2f58eaee36f90917174ee963633d7a6c11b"
+  }, {
+    "file" : "doc-058.txt",
+    "id" : "doc-058",
+    "longDocument" : true,
+    "bytes" : 102400,
+    "expectedChunks" : 200,
+    "sha256" : "576618e7e0d2bd36148c0b70c21649c008e51fa2198910c77173603b18a2433f"
+  }, {
+    "file" : "doc-059.txt",
+    "id" : "doc-059",
+    "longDocument" : false,
+    "bytes" : 10240,
+    "expectedChunks" : 20,
+    "sha256" : "d4bed110cc302f11cca31960879384342fe62c51a9dfb88e135813625c2f66b3"
+  }, {
+    "file" : "doc-060.txt",
+    "id" : "doc-060",
+    "longDocument" : true,
+    "bytes" : 102400,
+    "expectedChunks" : 200,
+    "sha256" : "66356883b079e1e126bb06308fc9d62a674f21e60099dc07f6433cd3d2b2201f"
+  }, {
+    "file" : "doc-061.txt",
+    "id" : "doc-061",
+    "longDocument" : false,
+    "bytes" : 10240,
+    "expectedChunks" : 20,
+    "sha256" : "c19040a517afa4a6eb6b6b49b2b297cdd87df03ca8434803aadb34509eea90a4"
+  }, {
+    "file" : "doc-062.txt",
+    "id" : "doc-062",
+    "longDocument" : true,
+    "bytes" : 102400,
+    "expectedChunks" : 200,
+    "sha256" : "dd05cee041fec6fc563d3193bc47281efea8d11200391d9c3e1b0696c0c55812"
+  }, {
+    "file" : "doc-063.txt",
+    "id" : "doc-063",
+    "longDocument" : false,
+    "bytes" : 10240,
+    "expectedChunks" : 20,
+    "sha256" : "673aaa8e75e93b9b044cb27c723745634b8d5fd4f42df26b4cb3facd1dc07cda"
+  }, {
+    "file" : "doc-064.txt",
+    "id" : "doc-064",
+    "longDocument" : true,
+    "bytes" : 102400,
+    "expectedChunks" : 200,
+    "sha256" : "53cf48edc7a46128418ffa452b05409922edad29219bfbdd38582659e0d06076"
+  }, {
+    "file" : "doc-065.txt",
+    "id" : "doc-065",
+    "longDocument" : false,
+    "bytes" : 10240,
+    "expectedChunks" : 20,
+    "sha256" : "6b73c60bad4a656609bc30ee52eef749ee7d4dbffed25000589f1ca9e7321bd1"
+  }, {
+    "file" : "doc-066.txt",
+    "id" : "doc-066",
+    "longDocument" : true,
+    "bytes" : 102400,
+    "expectedChunks" : 200,
+    "sha256" : "bb86758e9efcfffd9b54bee145e77d800c5940fd30d1e7f1d11f49ffd188830d"
+  }, {
+    "file" : "doc-067.txt",
+    "id" : "doc-067",
+    "longDocument" : false,
+    "bytes" : 10240,
+    "expectedChunks" : 20,
+    "sha256" : "eed5be6f9ab910c4e206913dcb8d676ff8abd7bdd32048f45ae4eed3cdcfdaf1"
+  }, {
+    "file" : "doc-068.txt",
+    "id" : "doc-068",
+    "longDocument" : true,
+    "bytes" : 102400,
+    "expectedChunks" : 200,
+    "sha256" : "31bcf3d187bc652ebf221989f9234d96e6e85f3474275e3b828a8cbf3b17a08f"
+  }, {
+    "file" : "doc-069.txt",
+    "id" : "doc-069",
+    "longDocument" : false,
+    "bytes" : 10240,
+    "expectedChunks" : 20,
+    "sha256" : "ad1151104acb8cb33a33531daabd57b1a1fc55a36e2bdeb35ccda3741a5e3bb3"
+  }, {
+    "file" : "doc-070.txt",
+    "id" : "doc-070",
+    "longDocument" : true,
+    "bytes" : 102400,
+    "expectedChunks" : 200,
+    "sha256" : "2b7b749bd1a7a5b5662fee06aaf3ce6f659d26bdd8da65d84a9e8588884a1935"
+  }, {
+    "file" : "doc-071.txt",
+    "id" : "doc-071",
+    "longDocument" : false,
+    "bytes" : 10240,
+    "expectedChunks" : 20,
+    "sha256" : "fc18c540b090b8469cd04a31d3434cfe8dd57b0e3ee987e67c781559f9d3b3b5"
+  }, {
+    "file" : "doc-072.txt",
+    "id" : "doc-072",
+    "longDocument" : true,
+    "bytes" : 102400,
+    "expectedChunks" : 200,
+    "sha256" : "cbda8ec3d71e434a8bba59cb62f52b7f803aa4a7d59dbc3e11efb31033cd8f9d"
+  }, {
+    "file" : "doc-073.txt",
+    "id" : "doc-073",
+    "longDocument" : false,
+    "bytes" : 10240,
+    "expectedChunks" : 20,
+    "sha256" : "d148170f152b38e2ebd8b5a4fa98b0343bc7df9c2bd678a90ff05be1c5af80f8"
+  }, {
+    "file" : "doc-074.txt",
+    "id" : "doc-074",
+    "longDocument" : true,
+    "bytes" : 102400,
+    "expectedChunks" : 200,
+    "sha256" : "edf24e42270a31bc32026cd1edf46ab9e3991ba66429e2ca37ab8ddb59805fba"
+  }, {
+    "file" : "doc-075.txt",
+    "id" : "doc-075",
+    "longDocument" : false,
+    "bytes" : 10240,
+    "expectedChunks" : 20,
+    "sha256" : "e910248e4646b140b1ec33d85f27039862f0139acd311d742e51405eef3b0e2d"
+  }, {
+    "file" : "doc-076.txt",
+    "id" : "doc-076",
+    "longDocument" : true,
+    "bytes" : 102400,
+    "expectedChunks" : 200,
+    "sha256" : "333baa48b8b9056c0df281088070c1747e68a715d8eafefdb7ad7792c434e91f"
+  }, {
+    "file" : "doc-077.txt",
+    "id" : "doc-077",
+    "longDocument" : false,
+    "bytes" : 10240,
+    "expectedChunks" : 20,
+    "sha256" : "425f3877a0a32cc2d68d6075bb415854273909cb1c0c77848cf568a89acfacbe"
+  }, {
+    "file" : "doc-078.txt",
+    "id" : "doc-078",
+    "longDocument" : true,
+    "bytes" : 102400,
+    "expectedChunks" : 200,
+    "sha256" : "cf833b4952941116eabf514bc6c41dfe6fab3c151561f5ccf02e042d7d534a2e"
+  }, {
+    "file" : "doc-079.txt",
+    "id" : "doc-079",
+    "longDocument" : false,
+    "bytes" : 10240,
+    "expectedChunks" : 20,
+    "sha256" : "35da9d886107ede6b20ee98f63797dab10dcd79c5e941ca481e189c509ba5c45"
+  }, {
+    "file" : "doc-080.txt",
+    "id" : "doc-080",
+    "longDocument" : true,
+    "bytes" : 102400,
+    "expectedChunks" : 200,
+    "sha256" : "4d8cf38a62b8a63a6afcb8e4f0a9fdad370fdee35536fca1ad94e4bb6bab18d3"
+  }, {
+    "file" : "doc-081.txt",
+    "id" : "doc-081",
+    "longDocument" : false,
+    "bytes" : 10240,
+    "expectedChunks" : 20,
+    "sha256" : "83320ef0558eee69f703f9cd7238916351e52029534ad06069b1fe92bd55531b"
+  }, {
+    "file" : "doc-082.txt",
+    "id" : "doc-082",
+    "longDocument" : true,
+    "bytes" : 102400,
+    "expectedChunks" : 200,
+    "sha256" : "129bb30168a9f541a92fb8f682f020ae4c4c79e7645c1288747b210702227c79"
+  }, {
+    "file" : "doc-083.txt",
+    "id" : "doc-083",
+    "longDocument" : false,
+    "bytes" : 10240,
+    "expectedChunks" : 20,
+    "sha256" : "8dc4399ff8a9d003931c2d9c436cbb243e6733029b0ca314e3229c24cac3567b"
+  }, {
+    "file" : "doc-084.txt",
+    "id" : "doc-084",
+    "longDocument" : true,
+    "bytes" : 102400,
+    "expectedChunks" : 200,
+    "sha256" : "d8fdf2cb7a8f6c2c833c6d103965b191c911d646da21886ac7df87de416aad58"
+  }, {
+    "file" : "doc-085.txt",
+    "id" : "doc-085",
+    "longDocument" : false,
+    "bytes" : 10240,
+    "expectedChunks" : 20,
+    "sha256" : "d72d85b388b3dcf16e9b33a7c48316734e533f686e3ef8fd47239bf893337ac7"
+  }, {
+    "file" : "doc-086.txt",
+    "id" : "doc-086",
+    "longDocument" : true,
+    "bytes" : 102400,
+    "expectedChunks" : 200,
+    "sha256" : "49657c903972566f8a459e155069b6d6d843416da51e197d6c6706316d891fe1"
+  }, {
+    "file" : "doc-087.txt",
+    "id" : "doc-087",
+    "longDocument" : false,
+    "bytes" : 10240,
+    "expectedChunks" : 20,
+    "sha256" : "9dee90481fdc12c220636f53b77968392ac471057bce2dd1a41be8af0988ff0e"
+  }, {
+    "file" : "doc-088.txt",
+    "id" : "doc-088",
+    "longDocument" : true,
+    "bytes" : 102400,
+    "expectedChunks" : 200,
+    "sha256" : "00d0ae87f9f72488bfb5f074d023da157ab1ac3c7d767669c09074ce5bb612e7"
+  }, {
+    "file" : "doc-089.txt",
+    "id" : "doc-089",
+    "longDocument" : false,
+    "bytes" : 10240,
+    "expectedChunks" : 20,
+    "sha256" : "42318ec5de75a5e4bc036984e5e0a976dfd4dc9878266fb7cad1bef4c10cbb4a"
+  }, {
+    "file" : "doc-090.txt",
+    "id" : "doc-090",
+    "longDocument" : true,
+    "bytes" : 102400,
+    "expectedChunks" : 200,
+    "sha256" : "e4b0269e5503f2a3b0b26a5844983cb3ff26bcc2a1f7a39c395eb29d478ec9b2"
+  }, {
+    "file" : "doc-091.txt",
+    "id" : "doc-091",
+    "longDocument" : false,
+    "bytes" : 10240,
+    "expectedChunks" : 20,
+    "sha256" : "cb4ee10fffd0587373d317fc9f17393bf1822f3ae114d03ee42b56ee7cecdc7a"
+  }, {
+    "file" : "doc-092.txt",
+    "id" : "doc-092",
+    "longDocument" : true,
+    "bytes" : 102400,
+    "expectedChunks" : 200,
+    "sha256" : "78a9d2bb12f6e2fb0438ad5619fac6f553c260da2381d938c2ba3411090ce8c2"
+  }, {
+    "file" : "doc-093.txt",
+    "id" : "doc-093",
+    "longDocument" : false,
+    "bytes" : 10240,
+    "expectedChunks" : 20,
+    "sha256" : "b6d4f8897d2672e6787317e65bb75132ec690dd504d99a919f996c95d1a117e3"
+  }, {
+    "file" : "doc-094.txt",
+    "id" : "doc-094",
+    "longDocument" : true,
+    "bytes" : 102400,
+    "expectedChunks" : 200,
+    "sha256" : "f05d4fc0da4d0c6db24198fb1f8f58d97e5ed228fdc3c5741aa94e92a050016d"
+  }, {
+    "file" : "doc-095.txt",
+    "id" : "doc-095",
+    "longDocument" : false,
+    "bytes" : 10240,
+    "expectedChunks" : 20,
+    "sha256" : "f9bc0c48c45061f84c8524019342eeb4a4631530ee622fc03feaea18e7bf04ed"
+  }, {
+    "file" : "doc-096.txt",
+    "id" : "doc-096",
+    "longDocument" : true,
+    "bytes" : 102400,
+    "expectedChunks" : 200,
+    "sha256" : "f4ae2b0be3b047c84ca2b73ebe79f4ab354853eeb5e4a4cd99b2225964378c80"
+  }, {
+    "file" : "doc-097.txt",
+    "id" : "doc-097",
+    "longDocument" : false,
+    "bytes" : 10240,
+    "expectedChunks" : 20,
+    "sha256" : "384ff2974e0813436330362227c6aaaaeb7b16fa6ac8c8517820412ff96e762a"
+  }, {
+    "file" : "doc-098.txt",
+    "id" : "doc-098",
+    "longDocument" : true,
+    "bytes" : 102400,
+    "expectedChunks" : 200,
+    "sha256" : "1d69620fac6224ef575c0b8a293b950457f17e9f55ac8f1a5a4b02c39c2f61b7"
+  }, {
+    "file" : "doc-099.txt",
+    "id" : "doc-099",
+    "longDocument" : false,
+    "bytes" : 10240,
+    "expectedChunks" : 20,
+    "sha256" : "db3eb79b9089abcc23ee3f91ee5b63103883f04a8321b7c065a70ef94ce4052a"
+  } ],
+  "overlap" : 0,
+  "longDocumentRatio" : 0.5,
+  "documentCount" : 100,
+  "averageChunks" : 110,
+  "schema" : "m19e-corpus-v1",
+  "averageBytes" : 56320
+}

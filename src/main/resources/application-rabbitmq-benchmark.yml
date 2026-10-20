@@ -1,0 +1,81 @@
+# Used only by RabbitBenchmarkNode; production .env and application.yml are not loaded.
+server:
+  address: 127.0.0.1
+  port: 0
+  tomcat:
+    threads:
+      max: 80
+spring:
+  main:
+    banner-mode: off
+  datasource:
+    url: jdbc:mysql://127.0.0.1:${M19E_MYSQL_PORT}/ai_document_agent_m19e?serverTimezone=UTC&connectTimeout=10000&socketTimeout=60000&rewriteBatchedStatements=true
+    username: m19e
+    password: ${M19E_DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 24
+      connection-timeout: 10000
+      transaction-isolation: TRANSACTION_REPEATABLE_READ
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        type:
+          json_format_mapper: jackson3
+  flyway:
+    connect-retries: 3
+    connect-retries-interval: 1s
+  servlet:
+    multipart:
+      max-file-size: 2MB
+      max-request-size: 3MB
+  rabbitmq:
+    host: 127.0.0.1
+    port: ${M19E_RABBIT_PORT}
+    username: m19e
+    password: ${M19E_RABBIT_PASSWORD}
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    template:
+      mandatory: true
+    connection-timeout: 5s
+app:
+  document:
+    storage-root: ${app.benchmark.rabbitmq.runtime-directory}/documents
+  chunking:
+    strategy: fixed-window
+    window-unit: CHARACTER
+    chunk-size: 512
+    overlap: 0
+    persistence-batch-size: 100
+  keyword:
+    enabled: true
+  ingestion:
+    batch-size: 50
+    listener-concurrency: 1
+    listener-max-concurrency: 1
+    prefetch: 2
+    retry-initial-delay: 100ms
+    retry-max-delay: 1s
+    max-attempts: 10
+    outbox:
+      scan-delay: 100ms
+      batch-size: 100
+    messaging:
+      document-queue: document.ingestion.queue
+      batch-queue: document.batch.queue
+  benchmark:
+    rabbitmq:
+      chunk-delay-ms: 2
+      batch-delay-ms: 2
+logging:
+  level:
+    root: WARN
+management:
+  health:
+    rabbit:
+      enabled: false
+    elasticsearch:
+      enabled: false

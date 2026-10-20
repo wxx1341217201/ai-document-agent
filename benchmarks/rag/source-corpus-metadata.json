@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "m19b-source-corpus-v1",
+  "provenance": "frozen_persisted_corpus_from_m19a_20261011",
+  "sourceSnapshot": "reports/retrieval-20261011T135303009Z-785ea7d4-corpus.jsonl",
+  "knowledgeBaseId": 2,
+  "chunks": 249,
+  "sha256": "adfc011aebc2cb0c4e86f50b95085901ecff8a6c953c8c4324bd87db5491b3c9",
+  "documents": {
+    "2": "pride-and-prejudice-long.txt",
+    "3": "w3c-sample.pdf",
+    "4": "sample.docx",
+    "5": "alice-long.txt"
+  },
+  "humanLabelReview": "pending"
+}

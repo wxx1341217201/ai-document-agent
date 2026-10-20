@@ -1,0 +1,65 @@
+# Loaded only by RecoveryBenchmarkNode; .env and the main application's service credentials are not imported.
+server:
+  address: 127.0.0.1
+  port: 0
+spring:
+  main:
+    banner-mode: off
+  datasource:
+    url: jdbc:mysql://127.0.0.1:${M19D_MYSQL_PORT:13307}/ai_document_agent_m19d?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&connectTimeout=10000&socketTimeout=15000
+    username: m19d
+    password: ${M19D_DB_PASSWORD}
+    hikari:
+      connection-timeout: 10000
+      maximum-pool-size: 8
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        type:
+          json_format_mapper: jackson3
+  flyway:
+    enabled: true
+    connect-retries: 3
+    connect-retries-interval: 1s
+  data:
+    redis:
+      host: 127.0.0.1
+      port: ${M19D_REDIS_PORT:16380}
+      password: ${M19D_REDIS_PASSWORD}
+      connect-timeout: 2s
+      timeout: 2s
+      repositories:
+        enabled: false
+app:
+  conversation:
+    enabled: true
+    memory-ttl: PT24H
+    max-memory-messages: 20
+    max-memory-tokens: 4000
+  progress:
+    enabled: true
+    subscription-token: ${M19D_ACCESS_TOKEN}
+  agent:
+    execution:
+      enabled: true
+      recovery-window: PT24H
+      lease: PT5S
+      scan-delay: PT1S
+      worker-threads: 2
+      queue-capacity: 100
+    retrieval-first:
+      deadline: PT15S
+    react:
+      deadline: PT15S
+      model-timeout: PT1S
+      tool-timeout: PT1S
+    plan:
+      deadline: PT15S
+      model-timeout: PT1S
+      tool-timeout: PT1S
+logging:
+  level:
+    root: WARN

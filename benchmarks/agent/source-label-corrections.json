@@ -1,0 +1,96 @@
+{
+  "version": "m19c-source-label-corrections-v1",
+  "knowledgeBaseId": 2,
+  "checkedAt": "2026-10-10T22:45:10.3247297+08:00",
+  "provenance": "assistant_source_checked_pending_human_review",
+  "source": "Knowledge-base-scoped read of persisted MySQL chunks; no model outputs used",
+  "affectedTasks": 18,
+  "originalLiveReport": "reports/agent-20261010T143845504Z-d79a93df.json",
+  "facts": {
+    "F255": {
+      "previousChunkIds": [
+        255
+      ],
+      "previousSourceQuote": "How doth the little crocodile",
+      "supportingChunkIds": [
+        254
+      ],
+      "sourceQuote": "How doth the little crocodile",
+      "documentId": 5,
+      "sourceContentSha256": "a01b13a3b10fb389434c44c87a148e14b81a42c9f16df424add3d19c218dd67f"
+    },
+    "F257": {
+      "previousChunkIds": [
+        257
+      ],
+      "previousSourceQuote": "A little bright-eyed terrier",
+      "supportingChunkIds": [
+        256
+      ],
+      "sourceQuote": "A little bright-eyed terrier",
+      "documentId": 5,
+      "sourceContentSha256": "316f692ce923b22906ac5a21cea763e325c7ad4b52a1c8e9fa32277980c03c48"
+    },
+    "F269": {
+      "previousChunkIds": [
+        269
+      ],
+      "previousSourceQuote": "It’s a Cheshire cat",
+      "supportingChunkIds": [
+        268
+      ],
+      "sourceQuote": "It’s a Cheshire cat",
+      "documentId": 5,
+      "sourceContentSha256": "72f62022cdc22ef208f2af87930cf3db0d41b4f5c4613e66bc3d091afd518234"
+    },
+    "F55": {
+      "previousChunkIds": [
+        55
+      ],
+      "previousSourceQuote": "therefore you must visit him as soon as he comes",
+      "supportingChunkIds": [
+        54
+      ],
+      "sourceQuote": "therefore you must visit him as soon as he comes",
+      "documentId": 2,
+      "sourceContentSha256": "6552bcbc573f78a0062eb5d0dbf7588c0d4c87ac80c3ceffe7aff592f82fd10c"
+    },
+    "F57": {
+      "previousChunkIds": [
+        57
+      ],
+      "previousSourceQuote": "his wife and five daughters",
+      "supportingChunkIds": [
+        57
+      ],
+      "sourceQuote": "he eluded the skill of them all",
+      "documentId": 2,
+      "sourceContentSha256": "75327f50277611341f82524cb8abea74b482ed819fff4d66f45987fe8db7c962"
+    },
+    "F62": {
+      "previousChunkIds": [
+        62
+      ],
+      "previousSourceQuote": "Mr. Bingley had danced with her twice",
+      "supportingChunkIds": [
+        62
+      ],
+      "sourceQuote": "Oh, you mean Jane, I suppose, because he danced with her twice.",
+      "documentId": 2,
+      "sourceContentSha256": "223476a9eab52a23aeb74714ed0511d2486589a60ceeff9de2f70c420c27d4b9"
+    },
+    "F66": {
+      "previousChunkIds": [
+        66
+      ],
+      "previousSourceQuote": "Mr. Darcy, who, though extremely surprised, was not unwilling to receive it",
+      "supportingChunkIds": [
+        66
+      ],
+      "sourceQuote": "Mr. Darcy, with grave propriety, requested to be allowed the honour of her hand, but in vain. Elizabeth was determined;",
+      "documentId": 2,
+      "sourceContentSha256": "6f04339004cd92e846dcd080279d3e76d330b8853ed6b664cf7d50b74b5facc3"
+    }
+  },
+  "affectedFactReferences": 19
+}

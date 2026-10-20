@@ -1,0 +1,6 @@
+app:
+  ingestion:
+    enabled: true
+  benchmark:
+    rabbitmq:
+      mode: async

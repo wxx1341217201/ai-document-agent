@@ -1,0 +1,48 @@
+{"id": "T900001-1", "knowledgeBaseId": 2, "question": "VECTOR_DIMENSION_MISMATCH 是否允许自动重试？", "answerable": true, "expectedChunkIds": [900001], "tags": ["exact", "technical", "error_code"]}
+{"id": "T900001-2", "knowledgeBaseId": 2, "question": "旧向量长度和新集合不一致时该检查什么？", "answerable": true, "expectedChunkIds": [900001], "tags": ["semantic", "technical", "error_code"]}
+{"id": "T900001-3", "knowledgeBaseId": 2, "question": "嵌入长度对不上索引规格，反复尝试能修好吗？", "answerable": true, "expectedChunkIds": [900001], "tags": ["chinese_synonym", "technical", "error_code"]}
+{"id": "T900001-4", "knowledgeBaseId": 2, "question": "1536 维向量写入 1024 维集合失败，应处理维度配置还是 embedding 限流？", "answerable": true, "expectedChunkIds": [900001], "tags": ["distractor", "technical", "error_code"]}
+{"id": "T900002-1", "knowledgeBaseId": 2, "question": "Embedding 的 HTTP 429 对应哪个错误码？", "answerable": true, "expectedChunkIds": [900002], "tags": ["exact", "technical", "error_code"]}
+{"id": "T900002-2", "knowledgeBaseId": 2, "question": "向量模型因短时间请求太多而拒绝调用，属于什么问题？", "answerable": true, "expectedChunkIds": [900002], "tags": ["semantic", "technical", "error_code"]}
+{"id": "T900002-3", "knowledgeBaseId": 2, "question": "嵌入服务说访问太频繁，该查口令还是降低调用频率？", "answerable": true, "expectedChunkIds": [900002], "tags": ["chinese_synonym", "technical", "error_code"]}
+{"id": "T900002-4", "knowledgeBaseId": 2, "question": "HTTP 429 应映射 EMBEDDING_RATE_LIMITED 还是 EMBEDDING_AUTHENTICATION_FAILED？", "answerable": true, "expectedChunkIds": [900002], "tags": ["distractor", "technical", "error_code"]}
+{"id": "T900003-1", "knowledgeBaseId": 2, "question": "EMBEDDING_AUTHENTICATION_FAILED 是否可重试？", "answerable": true, "expectedChunkIds": [900003], "tags": ["exact", "technical", "error_code"]}
+{"id": "T900003-2", "knowledgeBaseId": 2, "question": "模型服务不接受调用者身份时需要检查什么？", "answerable": true, "expectedChunkIds": [900003], "tags": ["semantic", "technical", "error_code"]}
+{"id": "T900003-3", "knowledgeBaseId": 2, "question": "嵌入接口拒绝认证，重新提交同一个口令会解决吗？", "answerable": true, "expectedChunkIds": [900003], "tags": ["chinese_synonym", "technical", "error_code"]}
+{"id": "T900003-4", "knowledgeBaseId": 2, "question": "Embedding HTTP 403 是鉴权失败还是 QDRANT_TIMEOUT？", "answerable": true, "expectedChunkIds": [900003], "tags": ["distractor", "technical", "error_code"]}
+{"id": "T900004-1", "knowledgeBaseId": 2, "question": "默认 circuit-failure-threshold 和 circuit-open-duration 分别是多少？", "answerable": true, "expectedChunkIds": [900004], "tags": ["exact", "technical", "identifier"]}
+{"id": "T900004-2", "knowledgeBaseId": 2, "question": "重排服务连续失败时检索顺序如何继续提供？", "answerable": true, "expectedChunkIds": [900004], "tags": ["semantic", "technical", "identifier"]}
+{"id": "T900004-3", "knowledgeBaseId": 2, "question": "重排连续出错三回之后，多长时间内会跳过远端调用？", "answerable": true, "expectedChunkIds": [900004], "tags": ["chinese_synonym", "technical", "identifier"]}
+{"id": "T900004-4", "knowledgeBaseId": 2, "question": "Cross-Encoder 熔断后使用 RRF 回退还是将问题交给 BM25 单路？", "answerable": true, "expectedChunkIds": [900004], "tags": ["distractor", "technical", "identifier"]}
+{"id": "T900005-1", "knowledgeBaseId": 2, "question": "rrfK 默认值是多少，RRF 是相加原始分数还是排名倒数？", "answerable": true, "expectedChunkIds": [900005], "tags": ["exact", "technical"]}
+{"id": "T900005-2", "knowledgeBaseId": 2, "question": "怎样合并不同量纲的语义与词法检索结果？", "answerable": true, "expectedChunkIds": [900005], "tags": ["semantic", "technical"]}
+{"id": "T900005-3", "knowledgeBaseId": 2, "question": "两路打分尺度不一样，融合时依靠名次还是裸分？", "answerable": true, "expectedChunkIds": [900005], "tags": ["chinese_synonym", "technical"]}
+{"id": "T900005-4", "knowledgeBaseId": 2, "question": "RRF 使用 1/(60+rank) 还是把 BM25 分数直接与余弦分数相加？", "answerable": true, "expectedChunkIds": [900005], "tags": ["distractor", "technical"]}
+{"id": "T900006-1", "knowledgeBaseId": 2, "question": "Qdrant knowledgeBaseId 过滤值按字符串还是数字保存？", "answerable": true, "expectedChunkIds": [900006], "tags": ["exact", "technical", "identifier"]}
+{"id": "T900006-2", "knowledgeBaseId": 2, "question": "为什么检索响应已经过滤了还要核对文档所属知识库？", "answerable": true, "expectedChunkIds": [900006], "tags": ["semantic", "technical", "identifier"]}
+{"id": "T900006-3", "knowledgeBaseId": 2, "question": "已做库过滤后，返回结果还须再次核对所属库吗？", "answerable": true, "expectedChunkIds": [900006], "tags": ["chinese_synonym", "technical", "identifier"]}
+{"id": "T900006-4", "knowledgeBaseId": 2, "question": "防止跨库文本发给 reranker 应靠 knowledgeBaseId 还是 documentId 单独过滤？", "answerable": true, "expectedChunkIds": [900006], "tags": ["distractor", "technical", "identifier"]}
+{"id": "T900007-1", "knowledgeBaseId": 2, "question": "文档进度 payload.documentId 与摄取任务 UUID 是否相同？", "answerable": true, "expectedChunkIds": [900007], "tags": ["exact", "technical", "identifier"]}
+{"id": "T900007-2", "knowledgeBaseId": 2, "question": "进度事件里的任务标识能直接当数据库文档主键吗？", "answerable": true, "expectedChunkIds": [900007], "tags": ["semantic", "technical", "identifier"]}
+{"id": "T900007-3", "knowledgeBaseId": 2, "question": "上传进度里的作业编号和文件记录号是一个东西吗？", "answerable": true, "expectedChunkIds": [900007], "tags": ["chinese_synonym", "technical", "identifier"]}
+{"id": "T900007-4", "knowledgeBaseId": 2, "question": "文档事件顶层任务 UUID 是 documentId，还是 payload.documentId 才是文档主键？", "answerable": true, "expectedChunkIds": [900007], "tags": ["distractor", "technical", "identifier"]}
+{"id": "T900008-1", "knowledgeBaseId": 2, "question": "CHUNKING_CHUNK_SIZE 和 CHUNKING_OVERLAP 默认分别是多少？", "answerable": true, "expectedChunkIds": [900008], "tags": ["exact", "technical", "identifier"]}
+{"id": "T900008-2", "knowledgeBaseId": 2, "question": "调整切片窗口后，已建好的索引是否会自动重新切片？", "answerable": true, "expectedChunkIds": [900008], "tags": ["semantic", "technical", "identifier"]}
+{"id": "T900008-3", "knowledgeBaseId": 2, "question": "把片段大小改小，旧知识库的内容块会立刻变化吗？", "answerable": true, "expectedChunkIds": [900008], "tags": ["chinese_synonym", "technical", "identifier"]}
+{"id": "T900008-4", "knowledgeBaseId": 2, "question": "修改 overlap 是自动重建旧 chunks，还是需要重新分片再建索引？", "answerable": true, "expectedChunkIds": [900008], "tags": ["distractor", "technical", "identifier"]}
+{"id": "T900009-1", "knowledgeBaseId": 2, "question": "retrieval_latency 是否包含 ChatModel，最少预热和正式采样各多少次？", "answerable": true, "expectedChunkIds": [900009], "tags": ["exact", "technical"]}
+{"id": "T900009-2", "knowledgeBaseId": 2, "question": "衡量检索响应速度时应把回答文字生成时间算进去吗？", "answerable": true, "expectedChunkIds": [900009], "tags": ["semantic", "technical"]}
+{"id": "T900009-3", "knowledgeBaseId": 2, "question": "测搜资料的尾延迟，要包括大模型写答案的时间吗？", "answerable": true, "expectedChunkIds": [900009], "tags": ["chinese_synonym", "technical"]}
+{"id": "T900009-4", "knowledgeBaseId": 2, "question": "P95 的路径终点是 Cross-Encoder Rerank，还是 ChatModel 输出最后一个 token？", "answerable": true, "expectedChunkIds": [900009], "tags": ["distractor", "technical"]}
+{"id": "T900010-1", "knowledgeBaseId": 2, "question": "answerable=false 的问题进入 Recall@5 分母吗？", "answerable": true, "expectedChunkIds": [900010], "tags": ["exact", "technical"]}
+{"id": "T900010-2", "knowledgeBaseId": 2, "question": "没有相关文档的问题应该如何单独统计？", "answerable": true, "expectedChunkIds": [900010], "tags": ["semantic", "technical"]}
+{"id": "T900010-3", "knowledgeBaseId": 2, "question": "库里没有答案的题，应算作普通召回失败吗？", "answerable": true, "expectedChunkIds": [900010], "tags": ["chinese_synonym", "technical"]}
+{"id": "T900010-4", "knowledgeBaseId": 2, "question": "Recall@5 的分母是所有问题，还是只有可回答问题？", "answerable": true, "expectedChunkIds": [900010], "tags": ["distractor", "technical"]}
+{"id": "TX1", "knowledgeBaseId": 2, "question": "嵌入请求过多与身份认证失败，分别对应哪些错误，重试属性有何不同？", "answerable": true, "expectedChunkIds": [900002, 900003], "tags": ["technical", "cross_context"]}
+{"id": "TX2", "knowledgeBaseId": 2, "question": "重排熔断期间使用的融合算法如何计算候选分数？", "answerable": true, "expectedChunkIds": [900004, 900005], "tags": ["technical", "cross_context"]}
+{"id": "TX3", "knowledgeBaseId": 2, "question": "检索隔离使用的知识库编号与文档进度 payload 中的文档编号分别有什么作用？", "answerable": true, "expectedChunkIds": [900006, 900007], "tags": ["technical", "cross_context", "cross_document"]}
+{"id": "TX4", "knowledgeBaseId": 2, "question": "无答案题如何影响召回分母，检索耗时又为何不统计模型生成答案？", "answerable": true, "expectedChunkIds": [900009, 900010], "tags": ["technical", "cross_context"]}
+{"id": "TN1", "knowledgeBaseId": 2, "question": "本项目生产 DashScope API 密钥的完整字符串是什么？", "answerable": false, "expectedChunkIds": [], "tags": ["technical", "unanswerable"]}
+{"id": "TN2", "knowledgeBaseId": 2, "question": "本项目知识库负责人个人电话号码是什么？", "answerable": false, "expectedChunkIds": [], "tags": ["technical", "unanswerable"]}
+{"id": "TN3", "knowledgeBaseId": 2, "question": "错误码 EMBEDDING_TEAPOT_PURPLE 的生产处理步骤是什么？", "answerable": false, "expectedChunkIds": [], "tags": ["technical", "unanswerable"]}
+{"id": "TN4", "knowledgeBaseId": 2, "question": "线上第 72431 号文档昨天被谁删除了？", "answerable": false, "expectedChunkIds": [], "tags": ["technical", "unanswerable"]}

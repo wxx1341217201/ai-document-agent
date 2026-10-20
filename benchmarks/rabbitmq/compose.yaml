@@ -1,0 +1,38 @@
+services:
+  mysql:
+    image: mysql:8.4
+    cpus: 2
+    mem_limit: 1g
+    environment:
+      MYSQL_ROOT_PASSWORD: ${M19E_MYSQL_ROOT_PASSWORD:?required}
+      MYSQL_DATABASE: ai_document_agent_m19e
+      MYSQL_USER: m19e
+      MYSQL_PASSWORD: ${M19E_DB_PASSWORD:?required}
+    ports:
+      - "127.0.0.1:${M19E_MYSQL_PORT}:3306"
+    labels:
+      benchmark.module: M19E
+      benchmark.run-id: ${M19E_RUN_ID:?required}
+    healthcheck:
+      test: ["CMD-SHELL", 'MYSQL_PWD="$$MYSQL_PASSWORD" mysql --protocol=TCP -h 127.0.0.1 -u"$$MYSQL_USER" "$$MYSQL_DATABASE" -e "SELECT 1" >/dev/null']
+      interval: 2s
+      timeout: 5s
+      retries: 60
+  rabbitmq:
+    image: rabbitmq:4.1-management
+    cpus: 2
+    mem_limit: 1g
+    environment:
+      RABBITMQ_DEFAULT_USER: m19e
+      RABBITMQ_DEFAULT_PASS: ${M19E_RABBIT_PASSWORD:?required}
+    ports:
+      - "127.0.0.1:${M19E_RABBIT_PORT}:5672"
+      - "127.0.0.1:${M19E_RABBIT_MANAGEMENT_PORT}:15672"
+    labels:
+      benchmark.module: M19E
+      benchmark.run-id: ${M19E_RUN_ID:?required}
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 2s
+      timeout: 5s
+      retries: 60
