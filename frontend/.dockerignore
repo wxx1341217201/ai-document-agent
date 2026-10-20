@@ -1,0 +1,13 @@
+# Allowlist: local env files, node_modules, reports and credentials never enter the build.
+**
+!package.json
+!package-lock.json
+!index.html
+!tsconfig*.json
+!vite.config.ts
+!src/
+!src/**
+!public/
+!public/**
+!nginx/
+!nginx/**

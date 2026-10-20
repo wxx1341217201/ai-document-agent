@@ -1,0 +1,115 @@
+# Standalone Linux-only deployment. No infrastructure containers or source builds.
+# Host networking lets the app reach SSH reverse forwards bound to host loopback.
+name: ai-document-agent-cloud
+
+services:
+  backend:
+    image: ai-document-agent-backend:hybrid
+    restart: unless-stopped
+    network_mode: host
+    env_file:
+      - ${HYBRID_ENV_FILE:-.env.hybrid.cloud}
+    environment:
+      SPRING_CONFIG_IMPORT: configtree:/run/secrets/
+      SERVER_ADDRESS: 127.0.0.1
+      SERVER_PORT: "18080"
+      SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:13307/${MYSQL_DATABASE:?Run initialize-hybrid.ps1 first}?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true&connectTimeout=5000&socketTimeout=15000
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "5"
+      SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: "1"
+      SPRING_DATA_REDIS_HOST: 127.0.0.1
+      SPRING_DATA_REDIS_PORT: "16380"
+      SPRING_DATA_REDIS_DATABASE: ${REDIS_DATABASE:-1}
+      SPRING_DATA_REDIS_CONNECT_TIMEOUT: 5s
+      SPRING_DATA_REDIS_TIMEOUT: 10s
+      RABBITMQ_HOST: 127.0.0.1
+      RABBITMQ_PORT: "15673"
+      SPRING_RABBITMQ_CONNECTION_TIMEOUT: 5s
+      QDRANT_HOST: 127.0.0.1
+      QDRANT_HTTP_PORT: "16333"
+      QDRANT_GRPC_PORT: "16334"
+      QDRANT_USE_TLS: "false"
+      QDRANT_CONNECT_TIMEOUT: 5s
+      QDRANT_REQUEST_TIMEOUT: 10s
+      ELASTICSEARCH_URIS: http://127.0.0.1:19200
+      SPRING_ELASTICSEARCH_CONNECTION_TIMEOUT: 5s
+      SPRING_ELASTICSEARCH_SOCKET_TIMEOUT: 10s
+      # Include the model request and Windows SSH round trip in retrieval budgets.
+      RETRIEVAL_VECTOR_TIMEOUT: ${HYBRID_RETRIEVAL_VECTOR_TIMEOUT:-10s}
+      RETRIEVAL_KEYWORD_TIMEOUT: ${HYBRID_RETRIEVAL_KEYWORD_TIMEOUT:-5s}
+      RETRIEVAL_TOTAL_TIMEOUT: ${HYBRID_RETRIEVAL_TOTAL_TIMEOUT:-15s}
+      # Query expansion waits up to 30s; allow source checks before the outer tool deadline.
+      RAG_QUERY_EXPANSION_TIMEOUT: ${RAG_QUERY_EXPANSION_TIMEOUT:-30s}
+      AGENT_REACT_TOOL_TIMEOUT: ${AGENT_REACT_TOOL_TIMEOUT:-35s}
+      AGENT_REACT_MODEL_TIMEOUT: ${AGENT_REACT_MODEL_TIMEOUT:-35s}
+      AGENT_REACT_DEADLINE: ${AGENT_REACT_DEADLINE:-120s}
+      AGENT_PLAN_TOOL_TIMEOUT: ${AGENT_PLAN_TOOL_TIMEOUT:-35s}
+      AGENT_PLAN_MODEL_TIMEOUT: ${AGENT_PLAN_MODEL_TIMEOUT:-35s}
+      AGENT_PLAN_DEADLINE: ${AGENT_PLAN_DEADLINE:-180s}
+      DOCUMENT_STORAGE_ROOT: /app/data/documents
+      DOCUMENT_OCR_ENABLED: ${DOCUMENT_OCR_ENABLED:-true}
+      DOCUMENT_OCR_DPI: ${DOCUMENT_OCR_DPI:-150}
+      DOCUMENT_OCR_MAX_CONCURRENT_PAGES: "1"
+      DOCUMENT_OCR_MAX_RENDERED_PIXELS: "4000000"
+      INGESTION_LISTENER_CONCURRENCY: "1"
+      INGESTION_LISTENER_MAX_CONCURRENCY: "1"
+      INGESTION_PREFETCH: "1"
+      INGESTION_BATCH_SIZE: "25"
+      AGENT_EXECUTION_WORKER_THREADS: "1"
+      PROGRESS_SENDER_THREADS: "1"
+      PROGRESS_MAX_SESSIONS: "16"
+      SERVER_TOMCAT_THREADS_MAX: "24"
+      SERVER_TOMCAT_THREADS_MIN_SPARE: "4"
+      JAVA_TOOL_OPTIONS: ${HYBRID_JAVA_OPTIONS:--Xms128m -Xmx512m -XX:MaxMetaspaceSize=256m -XX:MaxDirectMemorySize=96m -XX:ReservedCodeCacheSize=96m -XX:+UseSerialGC -XX:+ExitOnOutOfMemoryError}
+      MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: never
+      TZ: Asia/Shanghai
+    secrets:
+      - source: progress_subscription_token
+        target: app.progress.subscription-token
+    volumes:
+      - document_data:/app/data/documents
+    mem_limit: 1200m
+    cpus: 1.5
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:18080/actuator/health > /dev/null || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 90s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+  frontend:
+    image: ai-document-agent-frontend:hybrid
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      AIDA_NGINX_LISTEN: 127.0.0.1:8088
+      AIDA_BACKEND_URL: http://127.0.0.1:18080
+    secrets:
+      - progress_subscription_token
+    depends_on:
+      backend:
+        condition: service_healthy
+    mem_limit: 96m
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8088/healthz > /dev/null || exit 1"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: 5m
+        max-file: "2"
+
+volumes:
+  document_data:
+    name: ${HYBRID_DOCUMENT_VOLUME:-ai-document-agent-cloud_document_data}
+    external: ${HYBRID_DOCUMENT_VOLUME_EXTERNAL:-false}
+
+secrets:
+  progress_subscription_token:
+    file: ${PROGRESS_TOKEN_FILE:-./secrets/hybrid_progress_subscription_token}

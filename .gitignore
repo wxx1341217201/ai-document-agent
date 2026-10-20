@@ -33,3 +33,9 @@ build/
 .vscode/
 .env
 data/documents/
+secrets/
+.env.hybrid.cloud
+artifacts/
+reports/
+benchmarks/rabbitmq/results/
+.env.hybrid.public

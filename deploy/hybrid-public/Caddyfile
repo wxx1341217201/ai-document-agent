@@ -1,0 +1,52 @@
+{
+	admin off
+	# IP-address clients often omit SNI; ECS sees its private address after NAT.
+	default_sni {$PUBLIC_HOST}
+	servers {
+		protocols h1 h2
+	}
+}
+
+http:// {
+	# Loopback health checks never reach the application.
+	@health {
+		remote_ip 127.0.0.1 ::1
+		path /healthz
+	}
+	handle @health {
+		respond "ok" 200
+	}
+	handle {
+		redir https://{$PUBLIC_HOST}{uri} permanent
+	}
+}
+
+https://{$PUBLIC_HOST} {
+	tls {
+		issuer acme {
+			dir https://acme-v02.api.letsencrypt.org/directory
+			profile shortlived
+		}
+	}
+	# Browser Basic-auth caches are not consistently reused by WebSocket handshakes.
+	# Only a successful password check may mint the host-wide browser session.
+	# A missing deployment secret must fail closed, never match a missing cookie.
+	@needs_login not expression `"{$PUBLIC_SESSION_TOKEN}" != "" && {http.request.cookie.__Host-aida_session} == "{$PUBLIC_SESSION_TOKEN}"`
+	route {
+		route @needs_login {
+			basic_auth {
+				{$PUBLIC_USERNAME} {$PUBLIC_PASSWORD_HASH}
+			}
+			header {
+				+Set-Cookie "__Host-aida_session={$PUBLIC_SESSION_TOKEN}; Path=/; Secure; HttpOnly; SameSite=Strict"
+				Cache-Control "private, no-store"
+				defer
+			}
+		}
+		reverse_proxy 127.0.0.1:8088 {
+			# Gateway credentials stay here. Nginx supplies its server-only WS token.
+			header_up -Authorization
+			header_up -Cookie
+		}
+	}
+}

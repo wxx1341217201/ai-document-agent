@@ -1,4 +1,60 @@
 services:
+  frontend:
+    build:
+      context: ./frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_BIND_ADDRESS:-127.0.0.1}:${FRONTEND_PORT:-8088}:80"
+    secrets:
+      - progress_subscription_token
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  backend:
+    build:
+      context: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      SPRING_CONFIG_IMPORT: configtree:/run/secrets/
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE}?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true&connectTimeout=3000&socketTimeout=5000
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: "6379"
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: "5672"
+      QDRANT_HOST: qdrant
+      ELASTICSEARCH_URIS: http://elasticsearch:9200
+      ELASTICSEARCH_USERNAME: elastic
+      ELASTICSEARCH_PASSWORD: ${ELASTIC_PASSWORD:?ELASTIC_PASSWORD must be configured in .env}
+      DOCUMENT_STORAGE_ROOT: /app/data/documents
+      DOCUMENT_OCR_ENABLED: ${DOCUMENT_OCR_ENABLED:-true}
+      MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: never
+      TZ: Asia/Shanghai
+    secrets:
+      - source: progress_subscription_token
+        target: app.progress.subscription-token
+    volumes:
+      - document_data:/app/data/documents
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8080/actuator/health > /dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 60s
+
   mysql:
     image: mysql:8.4
     container_name: ai-agent-mysql
@@ -27,6 +83,8 @@ services:
     image: redis:8-alpine
     container_name: ai-agent-redis
     restart: unless-stopped
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
     command:
       [
         "redis-server",
@@ -43,7 +101,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "redis-cli -a $${REDIS_PASSWORD} ping"
+          "REDISCLI_AUTH=$$REDIS_PASSWORD redis-cli ping | grep -q '^PONG$'"
         ]
       interval: 10s
       timeout: 5s
@@ -79,7 +137,8 @@ services:
     volumes:
       - qdrant_data:/qdrant/storage
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:6333/readyz"]
+      # The official Qdrant image includes bash, but neither curl nor wget.
+      test: ["CMD", "bash", "-ec", "exec 3<>/dev/tcp/127.0.0.1/6333; printf 'GET /readyz HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3; head -n 1 <&3 | grep -q ' 200 '"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -114,3 +173,8 @@ volumes:
   rabbitmq_data:
   qdrant_data:
   elasticsearch_data:
+  document_data:
+
+secrets:
+  progress_subscription_token:
+    file: ${PROGRESS_TOKEN_FILE:-./secrets/progress_subscription_token}

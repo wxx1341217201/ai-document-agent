@@ -1,0 +1,15 @@
+# Opt-in settings for books with hundreds/thousands of OCR pages.
+# Keep RabbitMQ acknowledgement timeout longer than the bounded OCR operation.
+# Start with: docker compose -f compose.yaml -f compose.ocr-long-documents.yaml up -d --build
+services:
+  backend:
+    environment:
+      DOCUMENT_OCR_ENABLED: "true"
+      DOCUMENT_OCR_DOCUMENT_TIMEOUT: 6h
+      INGESTION_STALE_PROCESSING_TIMEOUT: 7h
+      INGESTION_PREFETCH: "1"
+      INGESTION_LISTENER_CONCURRENCY: "1"
+      INGESTION_LISTENER_MAX_CONCURRENCY: "1"
+  rabbitmq:
+    environment:
+      RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: -rabbit consumer_timeout 28800000

@@ -1,0 +1,34 @@
+# Optional gateway for direct public access; application and dependency ports stay private.
+services:
+  backend:
+    environment:
+      SERVER_FORWARD_HEADERS_STRATEGY: framework
+
+  gateway:
+    image: caddy:2.11.7-alpine
+    restart: unless-stopped
+    network_mode: host
+    env_file:
+      - .env.hybrid.public
+    environment:
+      GOMEMLIMIT: 80MiB
+    volumes:
+      - ./deploy/hybrid-public/Caddyfile:/etc/caddy/Caddyfile:ro
+      - public_tls_data:/data
+      - public_tls_config:/config
+    mem_limit: 128m
+    cpus: 0.5
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/healthz | grep -qx ok"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: 5m
+        max-file: "2"
+
+volumes:
+  public_tls_data:
+  public_tls_config:

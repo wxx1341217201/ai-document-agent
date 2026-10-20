@@ -1,0 +1,6 @@
+# Backend build receives source and pom only, never .env, data, Git or frontend files.
+**
+!pom.xml
+!src/
+!src/main/
+!src/main/**

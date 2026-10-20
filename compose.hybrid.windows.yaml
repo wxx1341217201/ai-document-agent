@@ -1,0 +1,28 @@
+# Apply after compose.yaml (Compose 2.24.4+). Existing named volumes are retained.
+# Start only: mysql redis rabbitmq qdrant elasticsearch.
+services:
+  frontend:
+    profiles: ["local-app"]
+    restart: "no"
+  backend:
+    profiles: ["local-app"]
+    restart: "no"
+  mysql:
+    ports: !override
+      - "127.0.0.1:3307:3306"
+  redis:
+    ports: !override
+      - "127.0.0.1:6380:6379"
+  rabbitmq:
+    ports: !override
+      - "127.0.0.1:5672:5672"
+      - "127.0.0.1:15672:15672"
+    environment:
+      RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: -rabbit consumer_timeout 28800000
+  qdrant:
+    ports: !override
+      - "127.0.0.1:6333:6333"
+      - "127.0.0.1:6334:6334"
+  elasticsearch:
+    ports: !override
+      - "127.0.0.1:9200:9200"
