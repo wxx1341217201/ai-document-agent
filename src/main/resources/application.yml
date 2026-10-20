@@ -53,6 +53,8 @@ spring:
       ddl-auto: validate
     properties:
       hibernate:
+        type:
+          json_format_mapper: jackson3
         format_sql: true
         jdbc:
           batch_size: ${CHUNKING_PERSISTENCE_BATCH_SIZE:100}
@@ -89,9 +91,33 @@ spring:
       max-request-size: ${DOCUMENT_MAX_REQUEST_SIZE:21MB}
 
 app:
+  reading:
+    enabled: ${READING_ENABLED:true}
+    poll-ms: ${READING_POLL_MS:1500}
+    rerank-enabled: ${READING_RERANK_ENABLED:false}
+  progress:
+    enabled: ${PROGRESS_ENABLED:true}
+    subscription-token: ${PROGRESS_SUBSCRIPTION_TOKEN:}
+    max-sessions: ${PROGRESS_MAX_SESSIONS:128}
+    max-subscriptions-per-session: ${PROGRESS_MAX_SUBSCRIPTIONS:8}
+    pending-messages-per-session: ${PROGRESS_PENDING_MESSAGES:32}
+    sender-threads: ${PROGRESS_SENDER_THREADS:4}
+    sender-queue-capacity: ${PROGRESS_SENDER_QUEUE_CAPACITY:128}
+    send-time-limit-millis: ${PROGRESS_SEND_TIME_LIMIT_MILLIS:5000}
+    send-buffer-size-bytes: ${PROGRESS_SEND_BUFFER_SIZE_BYTES:65536}
   document:
     storage-root: ${DOCUMENT_STORAGE_ROOT:./data/documents}
     max-file-size: ${DOCUMENT_MAX_FILE_SIZE:20MB}
+    ocr:
+      enabled: ${DOCUMENT_OCR_ENABLED:false}
+      command: ${DOCUMENT_OCR_COMMAND:tesseract}
+      language: ${DOCUMENT_OCR_LANGUAGE:chi_sim+eng}
+      dpi: ${DOCUMENT_OCR_DPI:300}
+      max-concurrent-pages: ${DOCUMENT_OCR_MAX_CONCURRENT_PAGES:1}
+      max-pages: ${DOCUMENT_OCR_MAX_PAGES:2000}
+      max-rendered-pixels: ${DOCUMENT_OCR_MAX_RENDERED_PIXELS:16000000}
+      page-timeout: ${DOCUMENT_OCR_PAGE_TIMEOUT:60s}
+      document-timeout: ${DOCUMENT_OCR_DOCUMENT_TIMEOUT:25m}
   chunking:
     strategy: ${CHUNKING_STRATEGY:paragraph}
     window-unit: ${CHUNKING_WINDOW_UNIT:TOKEN}
@@ -172,7 +198,9 @@ app:
     total-timeout: ${RETRIEVAL_TOTAL_TIMEOUT:3s}
   rerank:
     enabled: ${RERANK_ENABLED:false}
+    provider: ${RERANK_PROVIDER:generic}
     url: ${RERANK_URL:}
+    model: ${RERANK_MODEL:}
     api-key: ${RERANK_API_KEY:}
     api-key-header: ${RERANK_API_KEY_HEADER:Authorization}
     api-key-prefix: "${RERANK_API_KEY_PREFIX:Bearer }"
@@ -184,19 +212,81 @@ app:
     circuit-failure-threshold: ${RERANK_CIRCUIT_FAILURE_THRESHOLD:3}
     circuit-open-duration: ${RERANK_CIRCUIT_OPEN_DURATION:30s}
   rag:
+    disable-thinking: ${RAG_DISABLE_THINKING:true}
     enabled: ${RAG_ENABLED:true}
     default-top-k: ${RAG_DEFAULT_TOP_K:8}
     context-window-tokens: ${RAG_CONTEXT_WINDOW_TOKENS:16384}
     reserved-output-tokens: ${RAG_RESERVED_OUTPUT_TOKENS:2048}
-    max-context-characters: ${RAG_MAX_CONTEXT_CHARACTERS:12000}
-    max-chunk-characters: ${RAG_MAX_CHUNK_CHARACTERS:3000}
+    max-context-characters: ${RAG_MAX_CONTEXT_CHARACTERS:32000}
+    max-chunk-characters: ${RAG_MAX_CHUNK_CHARACTERS:4500}
     min-chunk-characters: ${RAG_MIN_CHUNK_CHARACTERS:200}
     quote-max-characters: ${RAG_QUOTE_MAX_CHARACTERS:500}
     redundant-overlap-characters: ${RAG_REDUNDANT_OVERLAP_CHARACTERS:80}
+    query-expansion-enabled: ${RAG_QUERY_EXPANSION_ENABLED:true}
+    max-retrieval-queries: ${RAG_MAX_RETRIEVAL_QUERIES:3}
+    retrieval-candidate-top-k: ${RAG_RETRIEVAL_CANDIDATE_TOP_K:20}
+    query-expansion-timeout: ${RAG_QUERY_EXPANSION_TIMEOUT:30s}
     connect-timeout: ${RAG_CHAT_CONNECT_TIMEOUT:3s}
     read-timeout: ${RAG_CHAT_READ_TIMEOUT:30s}
     chat-timeout: ${RAG_CHAT_REQUEST_TIMEOUT:30s}
     model: ${RAG_CHAT_MODEL:deepseek-flash}
+  conversation:
+    enabled: ${CONVERSATION_ENABLED:true}
+    memory-ttl: ${CONVERSATION_MEMORY_TTL:24h}
+    max-memory-messages: ${CONVERSATION_MAX_MEMORY_MESSAGES:20}
+    max-memory-tokens: ${CONVERSATION_MAX_MEMORY_TOKENS:4000}
+  agent:
+    execution:
+      enabled: ${AGENT_EXECUTION_ENABLED:true}
+      recovery-window: ${AGENT_EXECUTION_RECOVERY_WINDOW:24h}
+      lease: ${AGENT_EXECUTION_LEASE:2m}
+      scan-delay: ${AGENT_EXECUTION_SCAN_DELAY:5s}
+      worker-threads: ${AGENT_EXECUTION_WORKER_THREADS:2}
+      queue-capacity: ${AGENT_EXECUTION_QUEUE_CAPACITY:100}
+    plan:
+      structured-answers: ${AGENT_STRUCTURED_ANSWERS:false}
+      max-registered-sources: ${AGENT_MAX_REGISTERED_SOURCES:80}
+      max-evidence-tokens: ${AGENT_PLAN_MAX_EVIDENCE_TOKENS:8000}
+      planning-output-tokens: ${AGENT_PLAN_OUTPUT_TOKENS:1024}
+      synthesis-output-tokens: ${AGENT_PLAN_SYNTHESIS_TOKENS:2048}
+      json-planning: ${AGENT_PLAN_JSON_PLANNING:true}
+      verify-evidence: ${AGENT_PLAN_VERIFY_EVIDENCE:false}
+      max-steps: ${AGENT_PLAN_MAX_STEPS:8}
+      max-revisions: ${AGENT_PLAN_MAX_REVISIONS:1}
+      max-tool-calls: ${AGENT_PLAN_MAX_TOOL_CALLS:12}
+      max-model-calls: ${AGENT_PLAN_MAX_MODEL_CALLS:12}
+      max-transient-retries: ${AGENT_PLAN_TRANSIENT_RETRIES:1}
+      max-evidence-chunks: ${AGENT_PLAN_MAX_EVIDENCE_CHUNKS:20}
+      deadline: ${AGENT_PLAN_DEADLINE:40s}
+      model-timeout: ${AGENT_PLAN_MODEL_TIMEOUT:20s}
+      tool-timeout: ${AGENT_PLAN_TOOL_TIMEOUT:5s}
+    react:
+      structured-answers: ${AGENT_STRUCTURED_ANSWERS:false}
+      max-registered-sources: ${AGENT_MAX_REGISTERED_SOURCES:80}
+      require-initial-search: ${AGENT_REACT_REQUIRE_INITIAL_SEARCH:true}
+      max-evidence-tokens: ${AGENT_REACT_MAX_EVIDENCE_TOKENS:8000}
+      max-steps: ${AGENT_REACT_MAX_STEPS:6}
+      max-tool-calls: ${AGENT_REACT_MAX_TOOL_CALLS:6}
+      max-chunk-characters: ${AGENT_REACT_MAX_CHUNK_CHARACTERS:4500}
+      max-output-tokens: ${AGENT_REACT_MAX_OUTPUT_TOKENS:1536}
+      rerank: ${AGENT_RERANK:true}
+      repeat-threshold: ${AGENT_REACT_REPEAT_THRESHOLD:2}
+      top-k: ${AGENT_REACT_TOP_K:6}
+      max-evidence-chunks: ${AGENT_REACT_MAX_EVIDENCE_CHUNKS:20}
+      deadline: ${AGENT_REACT_DEADLINE:40s}
+      model-timeout: ${AGENT_REACT_MODEL_TIMEOUT:20s}
+      tool-timeout: ${AGENT_REACT_TOOL_TIMEOUT:5s}
+    retrieval-first:
+      structured-answers: ${AGENT_STRUCTURED_ANSWERS:false}
+      max-model-calls: 2
+      deadline: ${AGENT_DEADLINE:40s}
+      rewrite-enabled: ${AGENT_REWRITE_ENABLED:true}
+      rerank: ${AGENT_RERANK:true}
+      top-k: ${AGENT_TOP_K:8}
+      min-evidence-chunks: ${AGENT_MIN_EVIDENCE_CHUNKS:1}
+      min-fused-score: ${AGENT_MIN_FUSED_SCORE:0.015}
+      max-memory-messages: ${AGENT_MAX_MEMORY_MESSAGES:20}
+      max-memory-characters: ${AGENT_MAX_MEMORY_CHARACTERS:12000}
 
 server:
   port: 8080

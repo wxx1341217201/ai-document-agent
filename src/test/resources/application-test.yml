@@ -31,6 +31,20 @@ management:
       enabled: false
 
 app:
+  reading:
+    enabled: false
+  progress:
+    enabled: false
+  agent:
+    execution:
+      enabled: false
+    retrieval-first:
+      structured-answers: false
+    react:
+      structured-answers: false
+    plan:
+      structured-answers: false
+      verify-evidence: false
   keyword:
     enabled: false
   vector:
@@ -40,6 +54,9 @@ app:
   rerank:
     enabled: false
   rag:
+    enabled: false
+    retrieval-candidate-top-k: 1
+  conversation:
     enabled: false
   ingestion:
     enabled: false
