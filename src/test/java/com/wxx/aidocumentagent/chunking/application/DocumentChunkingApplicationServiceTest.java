@@ -72,6 +72,7 @@ class DocumentChunkingApplicationServiceTest {
 
     @Test
     void 在同一知识库内先替换旧chunk再按边界批量保存新chunk() {
+        when(documentChunkRepository.existsByKnowledgeBaseIdAndDocumentId(KNOWLEDGE_BASE_ID, DOCUMENT_ID)).thenReturn(true);
         when(documentChunkRepository.deleteByKnowledgeBaseIdAndDocumentId(KNOWLEDGE_BASE_ID, DOCUMENT_ID))
                 .thenReturn(2);
 
@@ -94,6 +95,17 @@ class DocumentChunkingApplicationServiceTest {
         InOrder order = inOrder(documentChunkRepository);
         order.verify(documentChunkRepository).deleteByKnowledgeBaseIdAndDocumentId(KNOWLEDGE_BASE_ID, DOCUMENT_ID);
         order.verify(documentChunkRepository).saveAll(any());
+    }
+
+    @Test
+    void 首次摄取不对空chunk范围执行删除以避免跨文档间隙锁() {
+        DocumentChunkingResult result = service.replace(KNOWLEDGE_BASE_ID, DOCUMENT_ID, document("abcdef"),
+                FixedWindowChunkingStrategy.STRATEGY_NAME, new ChunkingOptions(ChunkingUnit.CHARACTER, 3, 0));
+        assertThat(result.replacedChunkCount()).isZero();
+        assertThat(result.chunks()).hasSize(2);
+        verify(documentChunkRepository).existsByKnowledgeBaseIdAndDocumentId(KNOWLEDGE_BASE_ID, DOCUMENT_ID);
+        verify(documentChunkRepository, never()).deleteByKnowledgeBaseIdAndDocumentId(anyLong(), anyLong());
+        verify(documentChunkRepository).saveAll(any());
     }
 
     @Test

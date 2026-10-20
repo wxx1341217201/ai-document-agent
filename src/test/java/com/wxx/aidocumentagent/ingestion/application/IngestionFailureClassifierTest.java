@@ -1,5 +1,7 @@
 package com.wxx.aidocumentagent.ingestion.application;
 
+import com.wxx.aidocumentagent.common.api.BusinessException;
+import com.wxx.aidocumentagent.document.domain.DocumentErrorCode;
 import com.wxx.aidocumentagent.vector.VectorIndexErrorCode;
 import com.wxx.aidocumentagent.vector.VectorIndexException;
 import com.wxx.aidocumentagent.keyword.KeywordIndexErrorCode;
@@ -9,6 +11,27 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class IngestionFailureClassifierTest {
+
+    @Test
+    void permanentOcrFailuresKeepTheirActionableCodesWithoutRepeatingLongRecognition() {
+        for (var code : java.util.List.of(DocumentErrorCode.OCR_UNAVAILABLE, DocumentErrorCode.OCR_FAILED,
+                DocumentErrorCode.OCR_TIMEOUT, DocumentErrorCode.OCR_LIMIT_EXCEEDED)) {
+            var summary = new IngestionFailureClassifier().classify(new BusinessException(code));
+            assertThat(summary.code()).isEqualTo(code.code());
+            assertThat(summary.message()).isEqualTo(code.defaultMessage());
+            assertThat(summary.retryable()).isFalse();
+        }
+    }
+
+    @Test
+    void brokenPdfTextLayerFailsWithActionableMessageWithoutRetrying() {
+        var summary = new IngestionFailureClassifier()
+                .classify(new BusinessException(DocumentErrorCode.PARSE_UNREADABLE_TEXT));
+
+        assertThat(summary.code()).isEqualTo("DOCUMENT_PARSE_UNREADABLE_TEXT");
+        assertThat(summary.message()).contains("OCR", "TXT/DOCX");
+        assertThat(summary.retryable()).isFalse();
+    }
 
     @Test
     void 向量限流会作为可重试故障进入既有有限重试策略() {

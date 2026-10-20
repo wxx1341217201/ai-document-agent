@@ -26,6 +26,10 @@ import com.wxx.aidocumentagent.ingestion.messaging.DocumentIngestionMessage;
 import com.wxx.aidocumentagent.ingestion.messaging.IngestionMessageValidationException;
 import com.wxx.aidocumentagent.keyword.KeywordIndex;
 import com.wxx.aidocumentagent.vector.VectorIndex;
+import com.wxx.aidocumentagent.progress.ProgressEmitter;
+import com.wxx.aidocumentagent.progress.ProgressEventType;
+import com.wxx.aidocumentagent.progress.ProgressPayload;
+import com.wxx.aidocumentagent.progress.ProgressStream;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -45,6 +49,7 @@ public class DocumentIngestionCoordinator {
     private final IngestionProperties properties;
     private final ObjectProvider<VectorIndex> vectorIndexProvider;
     private final ObjectProvider<KeywordIndex> keywordIndexProvider;
+    private ProgressEmitter progress;
 
     @Autowired
     public DocumentIngestionCoordinator(DocumentIngestionJobRepository jobRepository,
@@ -68,6 +73,9 @@ public class DocumentIngestionCoordinator {
         this.vectorIndexProvider = vectorIndexProvider;
         this.keywordIndexProvider = keywordIndexProvider;
     }
+
+    @Autowired(required = false)
+    public void setProgressEmitter(ProgressEmitter progress) { this.progress = progress; }
 
     /** 保留 M06 的直接构造方式，供无向量基础设施的单元测试与适配器使用。 */
     public DocumentIngestionCoordinator(DocumentIngestionJobRepository jobRepository,
@@ -105,7 +113,7 @@ public class DocumentIngestionCoordinator {
             return;
         }
         if (job.getStatus() == IngestionJobStatus.UPLOADED) {
-            throw new RetryableIngestionException("任务尚未收到publisher confirm");
+            throw new IngestionPublicationPendingException("任务尚未收到publisher confirm");
         }
         if (!job.beginProcessing(java.time.LocalDateTime.now())) {
             throw new IllegalStateException("文档摄取任务状态不允许开始处理");
@@ -113,6 +121,7 @@ public class DocumentIngestionCoordinator {
         Document document = documentRepository.findByIdAndKnowledgeBaseId(message.documentId(), message.knowledgeBaseId())
                 .orElseThrow(() -> new IngestionMessageValidationException("摄取文档不存在或知识库不匹配"));
         document.markProcessing();
+        emitPhase(job, ProgressEventType.PARSING, "正在解析文档");
 
         // 如果进程在 ACK 前中断，重投的同一 job 只会看到 PROCESSING，不会重复替换 chunk 或重复建 batch。
         if (!batchTaskRepository.findByJobIdAndKnowledgeBaseIdOrderByBatchNoAsc(job.getJobId(),
@@ -121,6 +130,7 @@ public class DocumentIngestionCoordinator {
         }
 
         ParsedDocument parsedDocument = parse(document);
+        emitPhase(job, ProgressEventType.CHUNKING, "正在切分文档");
         deleteIndexesIfConfigured(document.getKnowledgeBaseId(), document.getId());
         DocumentChunkingResult chunkingResult = chunkingApplicationService.replace(document.getKnowledgeBaseId(),
                 document.getId(), parsedDocument);
@@ -133,6 +143,10 @@ public class DocumentIngestionCoordinator {
         Document persistedDocument = documentRepository.findByIdAndKnowledgeBaseId(document.getId(),
                 document.getKnowledgeBaseId()).orElseThrow(() -> new IngestionMessageValidationException("摄取文档不存在或知识库不匹配"));
         createBatchTasks(persistedJob, persistedDocument, chunkingResult.chunks().size());
+        if (persistedJob.getStatus() == IngestionJobStatus.READY) {
+            emit(persistedJob, ProgressEventType.DOCUMENT_READY, "READY", "文档已就绪");
+        }
+        else emit(persistedJob, ProgressEventType.INDEXING, "PROCESSING", "正在建立索引");
     }
 
     private ParsedDocument parse(Document document) {
@@ -185,5 +199,17 @@ public class DocumentIngestionCoordinator {
                 || job.getOperation() != message.operation()) {
             throw new IngestionMessageValidationException(IngestionErrorCode.INGESTION_SCOPE_MISMATCH.defaultMessage());
         }
+    }
+
+    private void emit(DocumentIngestionJob job, ProgressEventType type, String status, String summary) {
+        if (progress != null) progress.afterCommit(
+                ProgressStream.document(job.getKnowledgeBaseId(), job.getJobId(), job.getDocumentId()), type,
+                ProgressPayload.document(job.getDocumentId(), status, summary, null));
+    }
+
+    private void emitPhase(DocumentIngestionJob job, ProgressEventType type, String summary) {
+        if (progress != null) progress.immediate(
+                ProgressStream.document(job.getKnowledgeBaseId(), job.getJobId(), job.getDocumentId()), type,
+                ProgressPayload.document(job.getDocumentId(), "PROCESSING", summary, null));
     }
 }

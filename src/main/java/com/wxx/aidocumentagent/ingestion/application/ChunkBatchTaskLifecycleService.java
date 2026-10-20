@@ -17,6 +17,11 @@ import com.wxx.aidocumentagent.ingestion.infrastructure.persistence.DocumentInge
 import com.wxx.aidocumentagent.ingestion.infrastructure.persistence.DocumentIngestionOutboxEventRepository;
 import com.wxx.aidocumentagent.ingestion.messaging.ChunkBatchMessage;
 import com.wxx.aidocumentagent.ingestion.messaging.IngestionMessageValidationException;
+import com.wxx.aidocumentagent.progress.ProgressEmitter;
+import com.wxx.aidocumentagent.progress.ProgressEventType;
+import com.wxx.aidocumentagent.progress.ProgressPayload;
+import com.wxx.aidocumentagent.progress.ProgressStream;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +33,7 @@ public class ChunkBatchTaskLifecycleService {
     private final DocumentIngestionJobRepository jobRepository;
     private final DocumentRepository documentRepository;
     private final DocumentIngestionOutboxEventRepository outboxEventRepository;
+    private ProgressEmitter progress;
 
     public ChunkBatchTaskLifecycleService(DocumentBatchTaskRepository batchTaskRepository,
                                           DocumentIngestionJobRepository jobRepository,
@@ -38,6 +44,9 @@ public class ChunkBatchTaskLifecycleService {
         this.documentRepository = documentRepository;
         this.outboxEventRepository = outboxEventRepository;
     }
+
+    @Autowired(required = false)
+    public void setProgressEmitter(ProgressEmitter progress) { this.progress = progress; }
 
     @Transactional
     public Optional<BatchWork> claim(ChunkBatchMessage message) {
@@ -61,7 +70,7 @@ public class ChunkBatchTaskLifecycleService {
             return Optional.empty();
         }
         if (task.getStatus() == BatchTaskStatus.PENDING_DISPATCH) {
-            throw new RetryableIngestionException("batch尚未收到publisher confirm");
+            throw new IngestionPublicationPendingException("batch尚未收到publisher confirm");
         }
         if (!task.beginProcessing(LocalDateTime.now())) {
             // PROCESSING 表示已被另一个消费者领取；崩溃恢复由持久化超时扫描处理。
@@ -69,6 +78,7 @@ public class ChunkBatchTaskLifecycleService {
         }
         job.beginProcessing(LocalDateTime.now());
         document.markProcessing();
+        emit(job, ProgressEventType.INDEXING, "PROCESSING", "正在建立索引", null);
         return Optional.of(new BatchWork(task.getBatchId(), task.getJobId(), task.getKnowledgeBaseId(),
                 task.getDocumentId(), task.getChunkFrom(), task.getChunkTo(), task.getStage()));
     }
@@ -118,12 +128,21 @@ public class ChunkBatchTaskLifecycleService {
                     IngestionErrorCode.INGESTION_PROCESSING_FAILURE.defaultMessage(), LocalDateTime.now());
             document.markFailed(IngestionErrorCode.INGESTION_PROCESSING_FAILURE.code(),
                     IngestionErrorCode.INGESTION_PROCESSING_FAILURE.defaultMessage());
+            emit(job, ProgressEventType.DOCUMENT_FAILED, "FAILED", "文档处理失败",
+                    IngestionErrorCode.INGESTION_PROCESSING_FAILURE.code());
             return;
         }
         if (completed == job.getTotalBatchCount()) {
             job.markReady(LocalDateTime.now());
             document.markReady();
+            emit(job, ProgressEventType.DOCUMENT_READY, "READY", "文档已就绪", null);
         }
+    }
+
+    private void emit(DocumentIngestionJob job, ProgressEventType type, String status, String summary, String code) {
+        if (progress != null) progress.afterCommit(
+                ProgressStream.document(job.getKnowledgeBaseId(), job.getJobId(), job.getDocumentId()), type,
+                ProgressPayload.document(job.getDocumentId(), status, summary, code));
     }
 
     private void validateTaskIdentity(DocumentBatchTask task, ChunkBatchMessage message) {

@@ -65,8 +65,10 @@ public class DocumentChunkingApplicationService {
         List<TextChunk> chunks = strategy.split(parsedDocument, options);
 
         // 切分成功后才开始删除；之后的删除和所有批量写入处于同一事务，失败不会留下新旧混合数据。
-        int replacedChunkCount = documentChunkRepository.deleteByKnowledgeBaseIdAndDocumentId(knowledgeBaseId,
-                documentId);
+        // An empty DELETE under MySQL REPEATABLE_READ can gap-lock adjacent new documents.
+        // First ingestion has nothing to replace; a plain existence read avoids that cross-document lock.
+        int replacedChunkCount = documentChunkRepository.existsByKnowledgeBaseIdAndDocumentId(knowledgeBaseId, documentId)
+                ? documentChunkRepository.deleteByKnowledgeBaseIdAndDocumentId(knowledgeBaseId, documentId) : 0;
         saveInBatches(knowledgeBaseId, documentId, chunks);
         return new DocumentChunkingResult(knowledgeBaseId, documentId, strategy.name(), replacedChunkCount, chunks);
     }

@@ -17,13 +17,15 @@ public class ChunkBatchRabbitListener {
     private final IngestionMessageCodec messageCodec;
     private final ChunkBatchIndexingApplicationService indexingApplicationService;
     private final IngestionFailureHandler failureHandler;
+    private final IngestionPublicationGate publicationGate;
 
     public ChunkBatchRabbitListener(IngestionMessageCodec messageCodec,
                                     ChunkBatchIndexingApplicationService indexingApplicationService,
-                                    IngestionFailureHandler failureHandler) {
+                                    IngestionFailureHandler failureHandler, IngestionPublicationGate publicationGate) {
         this.messageCodec = messageCodec;
         this.indexingApplicationService = indexingApplicationService;
         this.failureHandler = failureHandler;
+        this.publicationGate = publicationGate;
     }
 
     @RabbitListener(queues = "${app.ingestion.messaging.batch-queue}",
@@ -31,7 +33,7 @@ public class ChunkBatchRabbitListener {
     public void consume(Message rawMessage) {
         ChunkBatchMessage message = messageCodec.decodeBatch(rawMessage);
         try {
-            indexingApplicationService.process(message);
+            publicationGate.run(() -> indexingApplicationService.process(message));
         }
         catch (IngestionMessageValidationException exception) {
             throw reject(exception);

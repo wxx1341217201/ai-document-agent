@@ -137,6 +137,12 @@ public class DocumentApplicationService {
     }
 
     @Transactional(readOnly = true)
+    public List<DocumentResponse> recent() {
+        return documentRepository.findTop5ByOrderByUpdatedAtDescIdDesc().stream()
+                .map(this::toResponse).toList();
+    }
+
+    @Transactional(readOnly = true)
     public DocumentResponse getById(long knowledgeBaseId, long documentId) {
         requireKnowledgeBase(knowledgeBaseId);
         return toResponse(findDocument(knowledgeBaseId, documentId));

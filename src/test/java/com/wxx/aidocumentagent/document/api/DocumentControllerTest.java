@@ -39,7 +39,8 @@ class DocumentControllerTest {
     @BeforeEach
     void setUp() {
         documentApplicationService = mock(DocumentApplicationService.class);
-        mockMvc = MockMvcBuilders.standaloneSetup(new DocumentController(documentApplicationService))
+        mockMvc = MockMvcBuilders.standaloneSetup(new DocumentController(documentApplicationService),
+                        new RecentDocumentController(documentApplicationService))
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .addFilter(new TraceIdFilter())
                 .build();
@@ -59,6 +60,21 @@ class DocumentControllerTest {
                 .andExpect(jsonPath("$.data.id").value(23))
                 .andExpect(jsonPath("$.data.status").value("UPLOADED"))
                 .andExpect(jsonPath("$.data.storageKey").doesNotExist());
+    }
+
+    @Test
+    void 最近文档返回元数据列表和统一响应包络() throws Exception {
+        when(documentApplicationService.recent()).thenReturn(List.of(documentResponse()));
+
+        mockMvc.perform(get("/api/v1/documents/recent")
+                        .header(TraceIdFilter.TRACE_ID_HEADER, "recent-documents"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value("SUCCESS"))
+                .andExpect(jsonPath("$.traceId").value("recent-documents"))
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0].id").value(23))
+                .andExpect(jsonPath("$.data[0].knowledgeBaseId").value(7))
+                .andExpect(jsonPath("$.data[0].storageKey").doesNotExist());
     }
 
     @Test

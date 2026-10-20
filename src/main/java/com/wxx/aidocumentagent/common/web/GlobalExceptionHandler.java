@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
@@ -91,6 +92,15 @@ public class GlobalExceptionHandler {
         return response(CommonErrorCode.RESOURCE_NOT_FOUND, CommonErrorCode.RESOURCE_NOT_FOUND.defaultMessage(), null);
     }
 
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleUnsupportedMethod(HttpRequestMethodNotSupportedException exception) {
+        var code = CommonErrorCode.METHOD_NOT_ALLOWED;
+        var supported = exception.getSupportedHttpMethods();
+        var builder = ResponseEntity.status(code.status()).contentType(org.springframework.http.MediaType.APPLICATION_JSON);
+        if (supported != null) builder.allow(supported.toArray(org.springframework.http.HttpMethod[]::new));
+        return builder.body(ApiResponse.failure(code, code.defaultMessage(), null, TraceIdFilter.currentTraceId()));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleUnexpectedException(Exception exception) {
         LOGGER.error("请求处理发生未捕获异常", exception);
@@ -103,7 +113,7 @@ public class GlobalExceptionHandler {
 
     private <T> ResponseEntity<ApiResponse<T>> response(ErrorCode errorCode, String message, T data) {
         ApiResponse<T> body = ApiResponse.failure(errorCode, message, data, TraceIdFilter.currentTraceId());
-        return ResponseEntity.status(errorCode.status()).body(body);
+        return ResponseEntity.status(errorCode.status()).contentType(org.springframework.http.MediaType.APPLICATION_JSON).body(body);
     }
 
     private List<FieldValidationError> toFieldErrors(List<FieldError> fieldErrors) {

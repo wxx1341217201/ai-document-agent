@@ -25,6 +25,11 @@ import com.wxx.aidocumentagent.ingestion.infrastructure.persistence.DocumentInge
 import com.wxx.aidocumentagent.ingestion.messaging.ChunkBatchMessage;
 import com.wxx.aidocumentagent.ingestion.messaging.DocumentIngestionMessage;
 import com.wxx.aidocumentagent.ingestion.messaging.IngestionMessageValidationException;
+import com.wxx.aidocumentagent.progress.ProgressEmitter;
+import com.wxx.aidocumentagent.progress.ProgressEventType;
+import com.wxx.aidocumentagent.progress.ProgressPayload;
+import com.wxx.aidocumentagent.progress.ProgressStream;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,6 +43,7 @@ public class IngestionOutboxLifecycleService {
     private final DocumentBatchTaskRepository batchTaskRepository;
     private final DocumentRepository documentRepository;
     private final IngestionProperties properties;
+    private ProgressEmitter progress;
 
     public IngestionOutboxLifecycleService(DocumentIngestionOutboxEventRepository outboxRepository,
                                            DocumentIngestionJobRepository jobRepository,
@@ -50,6 +56,9 @@ public class IngestionOutboxLifecycleService {
         this.documentRepository = documentRepository;
         this.properties = properties;
     }
+
+    @Autowired(required = false)
+    public void setProgressEmitter(ProgressEmitter progress) { this.progress = progress; }
 
     @Transactional
     public Optional<OutboxDispatchEnvelope> claim(String eventId) {
@@ -145,9 +154,13 @@ public class IngestionOutboxLifecycleService {
         if (job == null) {
             return;
         }
+        var before = job.getStatus();
         job.markQueued(LocalDateTime.now());
         documentRepository.findByIdAndKnowledgeBaseId(event.getDocumentId(), event.getKnowledgeBaseId())
                 .ifPresent(document -> document.markQueued());
+        if (before != job.getStatus() && job.getStatus() == com.wxx.aidocumentagent.ingestion.domain.IngestionJobStatus.QUEUED) {
+            emit(job, ProgressEventType.DOCUMENT_QUEUED, "QUEUED", "文档已排队", null);
+        }
     }
 
     private void markBatchQueued(DocumentIngestionOutboxEvent event) {
@@ -182,5 +195,13 @@ public class IngestionOutboxLifecycleService {
         }
         job.markFailed(code, message, now);
         document.markFailed(code, message);
+        emit(job, ProgressEventType.DOCUMENT_FAILED, "FAILED", "文档处理失败", code);
+    }
+
+    private void emit(DocumentIngestionJob job, ProgressEventType type, String status, String summary, String code) {
+        if (progress != null) progress.afterCommit(
+                ProgressStream.document(job.getKnowledgeBaseId(), job.getJobId(), job.getDocumentId()), type,
+                ProgressPayload.document(job.getDocumentId(), status, summary,
+                        code != null && code.matches("[A-Z][A-Z0-9_]{0,63}") ? code : null));
     }
 }

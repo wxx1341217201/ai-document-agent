@@ -15,6 +15,11 @@ import com.wxx.aidocumentagent.ingestion.infrastructure.persistence.DocumentInge
 import com.wxx.aidocumentagent.ingestion.infrastructure.persistence.DocumentIngestionJobRepository;
 import com.wxx.aidocumentagent.ingestion.infrastructure.persistence.DocumentIngestionOutboxEvent;
 import com.wxx.aidocumentagent.ingestion.infrastructure.persistence.DocumentIngestionOutboxEventRepository;
+import com.wxx.aidocumentagent.progress.ProgressEmitter;
+import com.wxx.aidocumentagent.progress.ProgressEventType;
+import com.wxx.aidocumentagent.progress.ProgressPayload;
+import com.wxx.aidocumentagent.progress.ProgressStream;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +32,7 @@ public class IngestionStaleProcessingRecovery {
     private final DocumentIngestionOutboxEventRepository outboxEventRepository;
     private final DocumentRepository documentRepository;
     private final IngestionProperties properties;
+    private ProgressEmitter progress;
 
     public IngestionStaleProcessingRecovery(DocumentIngestionJobRepository jobRepository,
                                             DocumentBatchTaskRepository batchTaskRepository,
@@ -39,6 +45,9 @@ public class IngestionStaleProcessingRecovery {
         this.documentRepository = documentRepository;
         this.properties = properties;
     }
+
+    @Autowired(required = false)
+    public void setProgressEmitter(ProgressEmitter progress) { this.progress = progress; }
 
     @Transactional
     public void recoverJob(String jobId, long knowledgeBaseId) {
@@ -64,6 +73,7 @@ public class IngestionStaleProcessingRecovery {
                     IngestionErrorCode.INGESTION_PROCESSING_FAILURE.defaultMessage(), LocalDateTime.now());
             document.markFailed(IngestionErrorCode.INGESTION_PROCESSING_FAILURE.code(),
                     IngestionErrorCode.INGESTION_PROCESSING_FAILURE.defaultMessage());
+            failed(job);
         }
     }
 
@@ -105,6 +115,15 @@ public class IngestionStaleProcessingRecovery {
                     IngestionErrorCode.INGESTION_PROCESSING_FAILURE.defaultMessage(), LocalDateTime.now());
             document.markFailed(IngestionErrorCode.INGESTION_PROCESSING_FAILURE.code(),
                     IngestionErrorCode.INGESTION_PROCESSING_FAILURE.defaultMessage());
+            failed(job);
         }
+    }
+
+    private void failed(DocumentIngestionJob job) {
+        if (progress != null) progress.afterCommit(
+                ProgressStream.document(job.getKnowledgeBaseId(), job.getJobId(), job.getDocumentId()),
+                ProgressEventType.DOCUMENT_FAILED,
+                ProgressPayload.document(job.getDocumentId(), "FAILED", "文档处理失败",
+                        IngestionErrorCode.INGESTION_PROCESSING_FAILURE.code()));
     }
 }

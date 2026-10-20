@@ -6,5 +6,6 @@ package com.wxx.aidocumentagent.document.parser;
 public enum ParseWarningCode {
     EMPTY_PAGE,
     SUSPECTED_GARBLED_TEXT,
+    OCR_APPLIED,
     TRUNCATED_TEXT
 }

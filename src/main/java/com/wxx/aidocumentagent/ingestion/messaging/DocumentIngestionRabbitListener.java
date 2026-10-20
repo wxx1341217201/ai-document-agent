@@ -17,13 +17,15 @@ public class DocumentIngestionRabbitListener {
     private final IngestionMessageCodec messageCodec;
     private final DocumentIngestionCoordinator coordinator;
     private final IngestionFailureHandler failureHandler;
+    private final IngestionPublicationGate publicationGate;
 
     public DocumentIngestionRabbitListener(IngestionMessageCodec messageCodec,
                                            DocumentIngestionCoordinator coordinator,
-                                           IngestionFailureHandler failureHandler) {
+                                           IngestionFailureHandler failureHandler, IngestionPublicationGate publicationGate) {
         this.messageCodec = messageCodec;
         this.coordinator = coordinator;
         this.failureHandler = failureHandler;
+        this.publicationGate = publicationGate;
     }
 
     @RabbitListener(queues = "${app.ingestion.messaging.document-queue}",
@@ -31,7 +33,7 @@ public class DocumentIngestionRabbitListener {
     public void consume(Message rawMessage) {
         DocumentIngestionMessage message = messageCodec.decodeDocument(rawMessage);
         try {
-            coordinator.process(message);
+            publicationGate.run(() -> coordinator.process(message));
         }
         catch (IngestionMessageValidationException exception) {
             throw reject(exception);

@@ -16,6 +16,11 @@ import com.wxx.aidocumentagent.ingestion.infrastructure.persistence.DocumentInge
 import com.wxx.aidocumentagent.ingestion.infrastructure.persistence.DocumentIngestionOutboxEventRepository;
 import com.wxx.aidocumentagent.ingestion.messaging.ChunkBatchMessage;
 import com.wxx.aidocumentagent.ingestion.messaging.DocumentIngestionMessage;
+import com.wxx.aidocumentagent.progress.ProgressEmitter;
+import com.wxx.aidocumentagent.progress.ProgressEventType;
+import com.wxx.aidocumentagent.progress.ProgressPayload;
+import com.wxx.aidocumentagent.progress.ProgressStream;
+import org.springframework.beans.factory.annotation.Autowired;
 import com.wxx.aidocumentagent.ingestion.messaging.IngestionMessageValidationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +35,7 @@ public class IngestionFailureHandler {
     private final DocumentRepository documentRepository;
     private final IngestionFailureClassifier failureClassifier;
     private final IngestionProperties properties;
+    private ProgressEmitter progress;
 
     public IngestionFailureHandler(DocumentIngestionJobRepository jobRepository,
                                    DocumentBatchTaskRepository batchTaskRepository,
@@ -44,6 +50,9 @@ public class IngestionFailureHandler {
         this.failureClassifier = failureClassifier;
         this.properties = properties;
     }
+
+    @Autowired(required = false)
+    public void setProgressEmitter(ProgressEmitter progress) { this.progress = progress; }
 
     @Transactional
     public IngestionFailureDisposition handleDocumentFailure(DocumentIngestionMessage message, Throwable failure) {
@@ -66,6 +75,7 @@ public class IngestionFailureHandler {
         }
         job.markFailed(summary.code(), summary.message(), LocalDateTime.now());
         document.markFailed(summary.code(), summary.message());
+        failed(job, summary.code());
         return IngestionFailureDisposition.DEAD_LETTER;
     }
 
@@ -106,7 +116,16 @@ public class IngestionFailureHandler {
         job.updateBatchSummary(job.getTotalBatchCount(), completed, failed);
         job.markFailed(summary.code(), summary.message(), LocalDateTime.now());
         document.markFailed(summary.code(), summary.message());
+        failed(job, summary.code());
         return IngestionFailureDisposition.DEAD_LETTER;
+    }
+
+    private void failed(DocumentIngestionJob job, String code) {
+        if (progress != null) progress.afterCommit(
+                ProgressStream.document(job.getKnowledgeBaseId(), job.getJobId(), job.getDocumentId()),
+                ProgressEventType.DOCUMENT_FAILED,
+                ProgressPayload.document(job.getDocumentId(), "FAILED", "文档处理失败",
+                        code != null && code.matches("[A-Z][A-Z0-9_]{0,63}") ? code : null));
     }
 
     private void validateDocumentMessage(DocumentIngestionJob job, DocumentIngestionMessage message) {

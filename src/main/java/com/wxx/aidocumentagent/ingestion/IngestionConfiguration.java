@@ -14,6 +14,7 @@ import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFacto
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.amqp.autoconfigure.SimpleRabbitListenerContainerFactoryConfigurer;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -169,9 +170,12 @@ public class IngestionConfiguration {
 
         @Bean("ingestionRabbitListenerContainerFactory")
         SimpleRabbitListenerContainerFactory ingestionRabbitListenerContainerFactory(
-                ConnectionFactory connectionFactory, IngestionProperties properties) {
+                ConnectionFactory connectionFactory, IngestionProperties properties,
+                SimpleRabbitListenerContainerFactoryConfigurer configurer) {
             SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
-            factory.setConnectionFactory(connectionFactory);
+            configurer.configure(factory, connectionFactory);
+            // 重试由持久化 Outbox 和重试队列负责，避免叠加容器内重试。
+            factory.setAdviceChain();
             factory.setAcknowledgeMode(AcknowledgeMode.AUTO);
             factory.setDefaultRequeueRejected(false);
             factory.setPrefetchCount(properties.getPrefetch());
